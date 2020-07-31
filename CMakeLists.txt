@@ -37,5 +37,6 @@ add_def(ALSYS_LIBRARY_TYPE)
 link_generic_module_libraries()
 
 add_subdirectory(third_party/openvr)
+set_target_properties(openvr_api64 PROPERTIES FOLDER third_party)
 
 register_pragma_module(${PROJ_NAME})

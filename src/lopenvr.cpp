@@ -1060,7 +1060,7 @@ void Lua::openvr::register_lua_library(Lua::Interface &l)
 		})}
 	});
 
-	std::unordered_map<std::string,int32_t> propErrorEnums {
+	std::unordered_map<std::string,lua_Integer> propErrorEnums {
 		{"TRACKED_PROPERTY_ERROR_SUCCESS",static_cast<int32_t>(vr::ETrackedPropertyError::TrackedProp_Success)},
 		{"TRACKED_PROPERTY_ERROR_WRONG_DATA_TYPE",static_cast<int32_t>(vr::ETrackedPropertyError::TrackedProp_WrongDataType)},
 		{"TRACKED_PROPERTY_ERROR_WRONG_DEVICE_CLASS",static_cast<int32_t>(vr::ETrackedPropertyError::TrackedProp_WrongDeviceClass)},
@@ -1074,7 +1074,7 @@ void Lua::openvr::register_lua_library(Lua::Interface &l)
 	};
 	Lua::RegisterLibraryEnums(lua,"openvr",propErrorEnums);
 
-	std::unordered_map<std::string,int32_t> propTrackingResults {
+	std::unordered_map<std::string,lua_Integer> propTrackingResults {
 		{"TRACKING_RESULT_UNINITIALIZED",umath::to_integral(vr::ETrackingResult::TrackingResult_Uninitialized)},
 		{"TRACKING_RESULT_CALIBRATING_IN_PROGRESS",umath::to_integral(vr::ETrackingResult::TrackingResult_Calibrating_InProgress)},
 		{"TRACKING_RESULT_CALIBRATING_OUT_OF_RANGE",umath::to_integral(vr::ETrackingResult::TrackingResult_Calibrating_OutOfRange)},
@@ -1083,7 +1083,7 @@ void Lua::openvr::register_lua_library(Lua::Interface &l)
 	};
 	Lua::RegisterLibraryEnums(lua,"openvr",propTrackingResults);
 
-	std::unordered_map<std::string,int32_t> initErrorEnums {
+	std::unordered_map<std::string,lua_Integer> initErrorEnums {
 		{"INIT_ERROR_NONE",static_cast<int32_t>(vr::EVRInitError::VRInitError_None)},
 		{"INIT_ERROR_UNKNOWN",static_cast<int32_t>(vr::EVRInitError::VRInitError_Unknown)},
 

@@ -100,8 +100,8 @@ std::string openvr::to_string(vr::VREvent_t ev)
 			return "Dashboard requested";
 		case vr::EVREventType::VREvent_ResetDashboard:
 			return "Reset dashboard";
-		case vr::EVREventType::VREvent_RenderToast:
-			return "Render toast";
+		// case vr::EVREventType::VREvent_RenderToast:
+		// 	return "Render toast";
 		case vr::EVREventType::VREvent_ImageLoaded:
 			return "Image loaded";
 		case vr::EVREventType::VREvent_ShowKeyboard:
