@@ -27,7 +27,7 @@ namespace openvr
 	};
 	struct ControllerState;
 	struct Eye;
-	std::string to_string(vr::VREvent_t ev);
+	std::string to_string(uint32_t ev);
 	std::string to_string(vr::VRCompositorError err);
 	std::string to_string(vr::ETrackedPropertyError err);
 	std::string to_string(vr::EVRInitError err);
@@ -184,7 +184,7 @@ namespace openvr
 		std::optional<CommandBufferInfo> StartRecording();
 		void StopRecording();
 		const Mat4 &GetHMDPoseMatrix() const;
-		void PollEvents();
+		const std::vector<vr::VREvent_t> &PollEvents();
 	private:
 		Instance(vr::IVRSystem *system,RenderAPI renderAPI,vr::IVRRenderModels *i,vr::IVRCompositor *compositor
 #ifdef USE_OPENGL_OFFSCREEN_CONTEXT
@@ -197,6 +197,7 @@ namespace openvr
 		util::WeakHandle<prosper::Shader> m_hShaderFlip;
 		std::unordered_map<uint32_t,ControllerState> m_controllerStates;
 		std::array<Mat4,vr::k_unMaxTrackedDeviceCount> m_poseTransforms;
+		std::vector<vr::VREvent_t> m_events {};
 #ifdef USE_OPENGL_OFFSCREEN_CONTEXT
 		GLFWwindow *m_window;
 #endif
@@ -213,7 +214,6 @@ namespace openvr
 		std::deque<CommandBufferInfo> m_commandBuffers = {};
 		std::optional<CommandBufferInfo> m_activeCommandBuffer = {};
 
-		void ProcessEvent(vr::VREvent_t ev);
 		void OnControllerStateChanged(uint32_t controllerId,uint32_t key,GLFW::KeyState state);
 		vr::EVRCompositorError SetSkyboxOverride(const std::vector<prosper::IImage*> &images) const;
 	};

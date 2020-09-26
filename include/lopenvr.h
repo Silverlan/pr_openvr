@@ -19,6 +19,7 @@ namespace Lua
 			int compositor_error_to_string(lua_State *l);
 			int button_id_to_string(lua_State *l);
 			int controller_axis_type_to_string(lua_State *l);
+			int event_type_to_string(lua_State *l);
 
 			int get_tracking_system_name(lua_State *l);
 			int get_model_number(lua_State *l);
@@ -140,7 +141,6 @@ namespace Lua
 			int get_time_since_last_vsync(lua_State *l);
 			int get_device_to_absolute_tracking_pose(lua_State *l);
 			int compute_seconds_to_photons(lua_State *l);
-			int reset_seated_zero_pose(lua_State *l);
 			int get_seated_zero_pose_to_standing_absolute_tracking_pose(lua_State *l);
 			int get_tracked_device_class(lua_State *l);
 			int is_tracked_device_connected(lua_State *l);

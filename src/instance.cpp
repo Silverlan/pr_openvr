@@ -28,9 +28,9 @@ extern DLLCLIENT CGame *c_game;
 using namespace openvr;
 
 #pragma optimize("",off)
-std::string openvr::to_string(vr::VREvent_t ev)
+std::string openvr::to_string(uint32_t ev)
 {
-	switch(ev.eventType)
+	switch(ev)
 	{
 		case vr::EVREventType::VREvent_None:
 			return "None";
@@ -246,9 +246,9 @@ Instance::Instance(vr::IVRSystem *system,RenderAPI renderAPI,vr::IVRRenderModels
 	m_rightEye = std::make_unique<Eye>(*this,vr::EVREye::Eye_Right);
 	auto *shaderFlip = IState::get_shader("screen_flip_y");
 	m_hShaderFlip = (shaderFlip != nullptr) ? shaderFlip->GetHandle() : util::WeakHandle<prosper::Shader>{};
-	m_cbThink = IState::add_callback(IState::Callback::Think,FunctionCallback<void>::Create([this]() {
-		PollEvents();
-	}));
+	//m_cbThink = IState::add_callback(IState::Callback::Think,FunctionCallback<void>::Create([this]() {
+	//	PollEvents();
+	//}));
 #ifdef _DEBUG
 	m_compositor->ShowMirrorWindow();
 #endif
@@ -260,11 +260,12 @@ Instance::~Instance()
 
 	vr::VR_Shutdown();
 }
-void Instance::PollEvents()
+const std::vector<vr::VREvent_t> &Instance::PollEvents()
 {
+	m_events.clear();
 	vr::VREvent_t event;
 	while(m_system->PollNextEvent(&event,sizeof(event)))
-		ProcessEvent(event);
+		m_events.push_back(std::move(event));
 
 	vr::VRControllerState_t state {};
 	auto *sys = GetSystemInterface();
@@ -280,6 +281,7 @@ void Instance::PollEvents()
 		}
 		it->second.UpdateState(state);
 	}
+	return m_events;
 }
 void Instance::OnControllerStateChanged(uint32_t controllerId,uint32_t key,GLFW::KeyState state)
 {
@@ -408,43 +410,6 @@ bool Instance::IsMirrorWindowVisible() const {return m_compositor->IsMirrorWindo
 void Instance::SetHmdViewEnabled(bool b) {m_bHmdViewEnabled = b;}
 bool Instance::IsHmdViewEnabled() const {return m_bHmdViewEnabled;}
 
-void Instance::ProcessEvent(vr::VREvent_t ev)
-{
-#ifdef _DEBUG
-	std::cout<<"[VR] Event: "<<openvr::to_string(ev)<<std::endl;
-#endif
-	auto &data = ev.data;
-	if(ev.eventType == vr::EVREventType::VREvent_ButtonPress)
-	{
-		auto &keyboard = data.keyboard;
-		//keyboard.
-	}
-	/*switch(ev.eventType)
-	{
-	case vr::VREvent_TrackedDeviceActivated:
-		{
-			//SetupRenderModelForTrackedDevice( event.trackedDeviceIndex );
-#ifdef _DEBUG
-			std::cout<<"Device "<<ev.trackedDeviceIndex<<" attached!"<<std::endl;
-#endif
-		}
-		break;
-	case vr::VREvent_TrackedDeviceDeactivated:
-		{
-#ifdef _DEBUG
-			std::cout<<"Device "<<ev.trackedDeviceIndex<<" deactivated!"<<std::endl;
-#endif
-		}
-		break;
-	case vr::VREvent_TrackedDeviceUpdated:
-		{
-#ifdef _DEBUG
-			std::cout<<"Device "<<ev.trackedDeviceIndex<<" updated!"<<std::endl;
-#endif
-		}
-		break;
-	}*/
-}
 std::string Instance::GetTrackedDeviceString(vr::TrackedDeviceProperty prop,vr::TrackedPropertyError *peError) const
 {
 	auto unRequiredBufferLen = m_system->GetStringTrackedDeviceProperty(vr::k_unTrackedDeviceIndex_Hmd,prop,nullptr,0,peError);

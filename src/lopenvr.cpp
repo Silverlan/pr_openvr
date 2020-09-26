@@ -196,6 +196,16 @@ int Lua::openvr::lib::button_id_to_string(lua_State *l)
 	return 1;
 }
 
+int Lua::openvr::lib::event_type_to_string(lua_State *l)
+{
+	if(s_vrInstance == nullptr)
+		return 0;
+	auto *sys = s_vrInstance->GetSystemInterface();
+	auto evType = Lua::CheckInt(l,1);
+	Lua::PushString(l,::openvr::to_string(static_cast<vr::EVREventType>(evType)));
+	return 1;
+}
+
 int Lua::openvr::lib::controller_axis_type_to_string(lua_State *l)
 {
 	if(s_vrInstance == nullptr)
@@ -690,15 +700,6 @@ int Lua::openvr::lib::compute_seconds_to_photons(lua_State *l)
 	return 1;
 }
 
-int Lua::openvr::lib::reset_seated_zero_pose(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		return 0;
-	auto *sys = s_vrInstance->GetSystemInterface();
-	sys->ResetSeatedZeroPose();
-	return 0;
-}
-
 int Lua::openvr::lib::get_seated_zero_pose_to_standing_absolute_tracking_pose(lua_State *l)
 {
 	if(s_vrInstance == nullptr)
@@ -850,6 +851,110 @@ int Lua::openvr::lib::get_pose_transform(lua_State *l)
 	return 2;
 }
 
+static void add_event_data(const vr::VREvent_t &ev,luabind::object &t)
+{
+	switch(ev.eventType)
+	{
+	case vr::VREvent_ButtonPress:
+	case vr::VREvent_ButtonUnpress:
+	case vr::VREvent_ButtonTouch:
+	case vr::VREvent_ButtonUntouch:
+	{
+		t["button"] = ev.data.controller.button;
+		break;
+	}
+	case vr::VREvent_MouseMove:
+	case vr::VREvent_MouseButtonDown:
+	case vr::VREvent_MouseButtonUp:
+	case vr::VREvent_TouchPadMove:
+	{
+		t["button"] = ev.data.mouse.button;
+		t["x"] = ev.data.mouse.x;
+		t["y"] = ev.data.mouse.y;
+		break;
+	}
+	case vr::VREvent_InputFocusCaptured:
+	case vr::VREvent_InputFocusReleased:
+	case vr::VREvent_SceneApplicationChanged:
+	case vr::VREvent_SceneFocusChanged:
+	case vr::VREvent_InputFocusChanged:
+	case vr::VREvent_SceneApplicationUsingWrongGraphicsAdapter:
+	case vr::VREvent_ActionBindingReloaded:
+	case vr::VREvent_Quit:
+	case vr::VREvent_ProcessQuit:
+	case vr::VREvent_QuitAcknowledged:
+	case vr::VREvent_Monitor_ShowHeadsetView:
+	case vr::VREvent_Monitor_HideHeadsetView:
+	{
+		t["connectionLost"] = ev.data.process.bConnectionLost;
+		t["forced"] = ev.data.process.bForced;
+		t["oldPid"] = ev.data.process.oldPid;
+		t["pid"] = ev.data.process.pid;
+		break;
+	}
+	case vr::VREvent_FocusEnter:
+	case vr::VREvent_FocusLeave:
+	case vr::VREvent_OverlayFocusChanged:
+	case vr::VREvent_DashboardRequested:
+	{
+		//auto &overlay = ev.data.overlay
+		break;
+	}
+	case vr::VREvent_ScrollDiscrete:
+	case vr::VREvent_ScrollSmooth:
+	{
+		t["viewportScale"] = ev.data.scroll.viewportscale;
+		t["xdelta"] = ev.data.scroll.xdelta;
+		t["ydelta"] = ev.data.scroll.ydelta;
+		break;
+	}
+	case vr::VREvent_ShowUI:
+	{
+		t["type"] = ev.data.showUi.eType;
+		break;
+	}
+	case vr::VREvent_ShowDevTools:
+	{
+		t["browserIdentifier"] = ev.data.showDevTools.nBrowserIdentifier;
+		break;
+	}
+	case vr::VREvent_Compositor_HDCPError:
+	{
+		t["code"] = ev.data.hdcpError.eCode;
+		break;
+	}
+	case vr::VREvent_Input_HapticVibration:
+	{
+		t["amplitude"] = ev.data.hapticVibration.fAmplitude;
+		t["durationSeconds"] = ev.data.hapticVibration.fDurationSeconds;
+		t["frequency"] = ev.data.hapticVibration.fFrequency;
+		break;
+	}
+	case vr::VREvent_Input_BindingLoadFailed:
+	case vr::VREvent_Input_BindingLoadSuccessful:
+	{
+		t["pathControllerType"] = ev.data.inputBinding.pathControllerType;
+		break;
+	}
+	case vr::VREvent_Input_ActionManifestLoadFailed:
+	{
+		//auto &actionManifest = ev.data.actionManifest
+		break;
+	}
+	case vr::VREvent_Input_ProgressUpdate:
+	{
+		t["progress"] = ev.data.progressUpdate.fProgress;
+		t["pathProgressAction"] = ev.data.progressUpdate.pathProgressAction;
+		break;
+	}
+	case vr::VREvent_SpatialAnchors_PoseUpdated:
+	{
+		//auto &spatialAnchor = ev.data.spatialAnchor
+		break;
+	}
+	}
+}
+
 void Lua::openvr::register_lua_library(Lua::Interface &l)
 {
 	auto *lua = l.GetState();
@@ -862,6 +967,7 @@ void Lua::openvr::register_lua_library(Lua::Interface &l)
 		{"compositor_error_to_string",Lua::openvr::lib::compositor_error_to_string},
 		{"button_id_to_string",Lua::openvr::lib::button_id_to_string},
 		{"controller_axis_type_to_string",Lua::openvr::lib::controller_axis_type_to_string},
+		{"event_type_to_string",Lua::openvr::lib::event_type_to_string},
 
 		{"get_tracking_system_name",Lua::openvr::lib::get_tracking_system_name},
 		{"get_model_number",Lua::openvr::lib::get_model_number},
@@ -983,7 +1089,6 @@ void Lua::openvr::register_lua_library(Lua::Interface &l)
 		{"get_time_since_last_vsync",Lua::openvr::lib::get_time_since_last_vsync},
 		{"get_device_to_absolute_tracking_pose",Lua::openvr::lib::get_device_to_absolute_tracking_pose},
 		{"compute_seconds_to_photons",Lua::openvr::lib::compute_seconds_to_photons},
-		{"reset_seated_zero_pose",Lua::openvr::lib::reset_seated_zero_pose},
 		{"get_seated_zero_pose_to_standing_absolute_tracking_pose",Lua::openvr::lib::get_seated_zero_pose_to_standing_absolute_tracking_pose},
 		{"get_tracked_device_class",Lua::openvr::lib::get_tracked_device_class},
 		{"is_tracked_device_connected",Lua::openvr::lib::is_tracked_device_connected},
@@ -1055,8 +1160,20 @@ void Lua::openvr::register_lua_library(Lua::Interface &l)
 		{"poll_events",static_cast<int32_t(*)(lua_State*)>([](lua_State *l) -> int32_t {
 			if(s_vrInstance == nullptr)
 				return 0;
-			s_vrInstance->PollEvents();
-			return 0;
+			auto t = luabind::newtable(l);
+			int32_t idx = 1;
+			for(auto &ev : s_vrInstance->PollEvents())
+			{
+				auto tEv = luabind::newtable(l);
+				tEv["type"] = ev.eventType;
+				auto data = luabind::newtable(l);
+				tEv["data"] = data;
+				tEv["trackedDeviceIndex"] = ev.trackedDeviceIndex;
+				add_event_data(ev,data);
+				t[idx++] = tEv;
+			}
+			t.push(l);
+			return 1;
 		})}
 	});
 
@@ -1198,7 +1315,169 @@ void Lua::openvr::register_lua_library(Lua::Interface &l)
 		{"CONTROLLER_AXIS_TYPE_JOYSTICK",static_cast<int32_t>(vr::EVRControllerAxisType::k_eControllerAxis_Joystick)},
 		{"CONTROLLER_AXIS_TYPE_TRIGGER",static_cast<int32_t>(vr::EVRControllerAxisType::k_eControllerAxis_Trigger)},
 
-		{"MAX_TRACKED_DEVICE_COUNT",vr::k_unMaxTrackedDeviceCount}
+		{"MAX_TRACKED_DEVICE_COUNT",vr::k_unMaxTrackedDeviceCount},
+
+		{"EVENT_NONE",vr::VREvent_None},
+		{"EVENT_TRACKED_DEVICE_ACTIVATED",vr::VREvent_TrackedDeviceActivated},
+		{"EVENT_TRACKED_DEVICE_DEACTIVATED",vr::VREvent_TrackedDeviceDeactivated},
+		{"EVENT_TRACKED_DEVICE_UPDATED",vr::VREvent_TrackedDeviceUpdated},
+		{"EVENT_TRACKED_DEVICE_USER_INTERACTION_STARTED",vr::VREvent_TrackedDeviceUserInteractionStarted},
+		{"EVENT_TRACKED_DEVICE_USER_INTERACTION_ENDED",vr::VREvent_TrackedDeviceUserInteractionEnded},
+		{"EVENT_IPD_CHANGED",vr::VREvent_IpdChanged},
+		{"EVENT_ENTER_STANDBY_MODE",vr::VREvent_EnterStandbyMode},
+		{"EVENT_LEAVE_STANDBY_MODE",vr::VREvent_LeaveStandbyMode},
+		{"EVENT_TRACKED_DEVICE_ROLE_CHANGED",vr::VREvent_TrackedDeviceRoleChanged},
+		{"EVENT_WATCHDOG_WAKE_UP_REQUESTED",vr::VREvent_WatchdogWakeUpRequested},
+		{"EVENT_LENS_DISTORTION_CHANGED",vr::VREvent_LensDistortionChanged},
+		{"EVENT_PROPERTY_CHANGED",vr::VREvent_PropertyChanged},
+		{"EVENT_WIRELESS_DISCONNECT",vr::VREvent_WirelessDisconnect},
+		{"EVENT_WIRELESS_RECONNECT",vr::VREvent_WirelessReconnect},
+		{"EVENT_BUTTON_PRESS",vr::VREvent_ButtonPress},
+		{"EVENT_BUTTON_UNPRESS",vr::VREvent_ButtonUnpress},
+		{"EVENT_BUTTON_TOUCH",vr::VREvent_ButtonTouch},
+		{"EVENT_BUTTON_UNTOUCH",vr::VREvent_ButtonUntouch},
+		{"EVENT_MODAL_CANCEL",vr::VREvent_Modal_Cancel},
+		{"EVENT_MOUSE_MOVE",vr::VREvent_MouseMove},
+		{"EVENT_MOUSE_BUTTON_DOWN",vr::VREvent_MouseButtonDown},
+		{"EVENT_MOUSE_BUTTON_UP",vr::VREvent_MouseButtonUp},
+		{"EVENT_FOCUS_ENTER",vr::VREvent_FocusEnter},
+		{"EVENT_FOCUS_LEAVE",vr::VREvent_FocusLeave},
+		{"EVENT_SCROLL_DISCRETE",vr::VREvent_ScrollDiscrete},
+		{"EVENT_TOUCH_PAD_MOVE",vr::VREvent_TouchPadMove},
+		{"EVENT_OVERLAY_FOCUS_CHANGED",vr::VREvent_OverlayFocusChanged},
+		{"EVENT_RELOAD_OVERLAYS",vr::VREvent_ReloadOverlays},
+		{"EVENT_SCROLL_SMOOTH",vr::VREvent_ScrollSmooth},
+		{"EVENT_LOCK_MOUSE_POSITION",vr::VREvent_LockMousePosition},
+		{"EVENT_UNLOCK_MOUSE_POSITION",vr::VREvent_UnlockMousePosition},
+		{"EVENT_INPUT_FOCUS_CAPTURED",vr::VREvent_InputFocusCaptured},
+		{"EVENT_INPUT_FOCUS_RELEASED",vr::VREvent_InputFocusReleased},
+		{"EVENT_SCENE_APPLICATION_CHANGED",vr::VREvent_SceneApplicationChanged},
+		{"EVENT_SCENE_FOCUS_CHANGED",vr::VREvent_SceneFocusChanged},
+		{"EVENT_INPUT_FOCUS_CHANGED",vr::VREvent_InputFocusChanged},
+		{"EVENT_SCENE_APPLICATION_USING_WRONG_GRAPHICS_ADAPTER",vr::VREvent_SceneApplicationUsingWrongGraphicsAdapter},
+		{"EVENT_ACTION_BINDING_RELOADED",vr::VREvent_ActionBindingReloaded},
+		{"EVENT_HIDE_RENDER_MODELS",vr::VREvent_HideRenderModels},
+		{"EVENT_SHOW_RENDER_MODELS",vr::VREvent_ShowRenderModels},
+		{"EVENT_SCENE_APPLICATION_STATE_CHANGED",vr::VREvent_SceneApplicationStateChanged},
+		{"EVENT_CONSOLE_OPENED",vr::VREvent_ConsoleOpened},
+		{"EVENT_CONSOLE_CLOSED",vr::VREvent_ConsoleClosed},
+		{"EVENT_OVERLAY_SHOWN",vr::VREvent_OverlayShown},
+		{"EVENT_OVERLAY_HIDDEN",vr::VREvent_OverlayHidden},
+		{"EVENT_DASHBOARD_ACTIVATED",vr::VREvent_DashboardActivated},
+		{"EVENT_DASHBOARD_DEACTIVATED",vr::VREvent_DashboardDeactivated},
+		{"EVENT_DASHBOARD_REQUESTED",vr::VREvent_DashboardRequested},
+		{"EVENT_RESET_DASHBOARD",vr::VREvent_ResetDashboard},
+		{"EVENT_IMAGE_LOADED",vr::VREvent_ImageLoaded},
+		{"EVENT_SHOW_KEYBOARD",vr::VREvent_ShowKeyboard},
+		{"EVENT_HIDE_KEYBOARD",vr::VREvent_HideKeyboard},
+		{"EVENT_OVERLAY_GAMEPAD_FOCUS_GAINED",vr::VREvent_OverlayGamepadFocusGained},
+		{"EVENT_OVERLAY_GAMEPAD_FOCUS_LOST",vr::VREvent_OverlayGamepadFocusLost},
+		{"EVENT_OVERLAY_SHARED_TEXTURE_CHANGED",vr::VREvent_OverlaySharedTextureChanged},
+		{"EVENT_SCREENSHOT_TRIGGERED",vr::VREvent_ScreenshotTriggered},
+		{"EVENT_IMAGE_FAILED",vr::VREvent_ImageFailed},
+		{"EVENT_DASHBOARD_OVERLAY_CREATED",vr::VREvent_DashboardOverlayCreated},
+		{"EVENT_SWITCH_GAMEPAD_FOCUS",vr::VREvent_SwitchGamepadFocus},
+		{"EVENT_REQUEST_SCREENSHOT",vr::VREvent_RequestScreenshot},
+		{"EVENT_SCREENSHOT_TAKEN",vr::VREvent_ScreenshotTaken},
+		{"EVENT_SCREENSHOT_FAILED",vr::VREvent_ScreenshotFailed},
+		{"EVENT_SUBMIT_SCREENSHOT_TO_DASHBOARD",vr::VREvent_SubmitScreenshotToDashboard},
+		{"EVENT_SCREENSHOT_PROGRESS_TO_DASHBOARD",vr::VREvent_ScreenshotProgressToDashboard},
+		{"EVENT_PRIMARY_DASHBOARD_DEVICE_CHANGED",vr::VREvent_PrimaryDashboardDeviceChanged},
+		{"EVENT_ROOM_VIEW_SHOWN",vr::VREvent_RoomViewShown},
+		{"EVENT_ROOM_VIEW_HIDDEN",vr::VREvent_RoomViewHidden},
+		{"EVENT_SHOW_UI",vr::VREvent_ShowUI},
+		{"EVENT_SHOW_DEV_TOOLS",vr::VREvent_ShowDevTools},
+		{"EVENT_DESKTOP_VIEW_UPDATING",vr::VREvent_DesktopViewUpdating},
+		{"EVENT_DESKTOP_VIEW_READY",vr::VREvent_DesktopViewReady},
+		{"EVENT_NOTIFICATION_SHOWN",vr::VREvent_Notification_Shown},
+		{"EVENT_NOTIFICATION_HIDDEN",vr::VREvent_Notification_Hidden},
+		{"EVENT_NOTIFICATION_BEGIN_INTERACTION",vr::VREvent_Notification_BeginInteraction},
+		{"EVENT_NOTIFICATION_DESTROYED",vr::VREvent_Notification_Destroyed},
+		{"EVENT_QUIT",vr::VREvent_Quit},
+		{"EVENT_PROCESS_QUIT",vr::VREvent_ProcessQuit},
+		{"EVENT_QUIT_ACKNOWLEDGED",vr::VREvent_QuitAcknowledged},
+		{"EVENT_DRIVER_REQUESTED_QUIT",vr::VREvent_DriverRequestedQuit},
+		{"EVENT_RESTART_REQUESTED",vr::VREvent_RestartRequested},
+		{"EVENT_CHAPERONE_DATA_HAS_CHANGED",vr::VREvent_ChaperoneDataHasChanged},
+		{"EVENT_CHAPERONE_UNIVERSE_HAS_CHANGED",vr::VREvent_ChaperoneUniverseHasChanged},
+		{"EVENT_CHAPERONE_TEMP_DATA_HAS_CHANGED",vr::VREvent_ChaperoneTempDataHasChanged},
+		{"EVENT_CHAPERONE_SETTINGS_HAVE_CHANGED",vr::VREvent_ChaperoneSettingsHaveChanged},
+		{"EVENT_SEATED_ZERO_POSE_RESET",vr::VREvent_SeatedZeroPoseReset},
+		{"EVENT_CHAPERONE_FLUSH_CACHE",vr::VREvent_ChaperoneFlushCache},
+		{"EVENT_CHAPERONE_ROOM_SETUP_STARTING",vr::VREvent_ChaperoneRoomSetupStarting},
+		{"EVENT_CHAPERONE_ROOM_SETUP_FINISHED",vr::VREvent_ChaperoneRoomSetupFinished},
+		{"EVENT_STANDING_ZERO_POSE_RESET",vr::VREvent_StandingZeroPoseReset},
+		{"EVENT_AUDIO_SETTINGS_HAVE_CHANGED",vr::VREvent_AudioSettingsHaveChanged},
+		{"EVENT_BACKGROUND_SETTING_HAS_CHANGED",vr::VREvent_BackgroundSettingHasChanged},
+		{"EVENT_CAMERA_SETTINGS_HAVE_CHANGED",vr::VREvent_CameraSettingsHaveChanged},
+		{"EVENT_REPROJECTION_SETTING_HAS_CHANGED",vr::VREvent_ReprojectionSettingHasChanged},
+		{"EVENT_MODEL_SKIN_SETTINGS_HAVE_CHANGED",vr::VREvent_ModelSkinSettingsHaveChanged},
+		{"EVENT_ENVIRONMENT_SETTINGS_HAVE_CHANGED",vr::VREvent_EnvironmentSettingsHaveChanged},
+		{"EVENT_POWER_SETTINGS_HAVE_CHANGED",vr::VREvent_PowerSettingsHaveChanged},
+		{"EVENT_ENABLE_HOME_APP_SETTINGS_HAVE_CHANGED",vr::VREvent_EnableHomeAppSettingsHaveChanged},
+		{"EVENT_STEAM_VR_SECTION_SETTING_CHANGED",vr::VREvent_SteamVRSectionSettingChanged},
+		{"EVENT_LIGHTHOUSE_SECTION_SETTING_CHANGED",vr::VREvent_LighthouseSectionSettingChanged},
+		{"EVENT_NULL_SECTION_SETTING_CHANGED",vr::VREvent_NullSectionSettingChanged},
+		{"EVENT_USER_INTERFACE_SECTION_SETTING_CHANGED",vr::VREvent_UserInterfaceSectionSettingChanged},
+		{"EVENT_NOTIFICATIONS_SECTION_SETTING_CHANGED",vr::VREvent_NotificationsSectionSettingChanged},
+		{"EVENT_KEYBOARD_SECTION_SETTING_CHANGED",vr::VREvent_KeyboardSectionSettingChanged},
+		{"EVENT_PERF_SECTION_SETTING_CHANGED",vr::VREvent_PerfSectionSettingChanged},
+		{"EVENT_DASHBOARD_SECTION_SETTING_CHANGED",vr::VREvent_DashboardSectionSettingChanged},
+		{"EVENT_WEB_INTERFACE_SECTION_SETTING_CHANGED",vr::VREvent_WebInterfaceSectionSettingChanged},
+		{"EVENT_TRACKERS_SECTION_SETTING_CHANGED",vr::VREvent_TrackersSectionSettingChanged},
+		{"EVENT_LAST_KNOWN_SECTION_SETTING_CHANGED",vr::VREvent_LastKnownSectionSettingChanged},
+		{"EVENT_DISMISSED_WARNINGS_SECTION_SETTING_CHANGED",vr::VREvent_DismissedWarningsSectionSettingChanged},
+		{"EVENT_GPU_SPEED_SECTION_SETTING_CHANGED",vr::VREvent_GpuSpeedSectionSettingChanged},
+		{"EVENT_WINDOWS_MR_SECTION_SETTING_CHANGED",vr::VREvent_WindowsMRSectionSettingChanged},
+		{"EVENT_OTHER_SECTION_SETTING_CHANGED",vr::VREvent_OtherSectionSettingChanged},
+		{"EVENT_STATUS_UPDATE",vr::VREvent_StatusUpdate},
+		{"EVENT_WEB_INTERFACE_INSTALL_DRIVER_COMPLETED",vr::VREvent_WebInterface_InstallDriverCompleted},
+		{"EVENT_MC_IMAGE_UPDATED",vr::VREvent_MCImageUpdated},
+		{"EVENT_FIRMWARE_UPDATE_STARTED",vr::VREvent_FirmwareUpdateStarted},
+		{"EVENT_FIRMWARE_UPDATE_FINISHED",vr::VREvent_FirmwareUpdateFinished},
+		{"EVENT_KEYBOARD_CLOSED",vr::VREvent_KeyboardClosed},
+		{"EVENT_KEYBOARD_CHAR_INPUT",vr::VREvent_KeyboardCharInput},
+		{"EVENT_KEYBOARD_DONE",vr::VREvent_KeyboardDone},
+		{"EVENT_APPLICATION_LIST_UPDATED",vr::VREvent_ApplicationListUpdated},
+		{"EVENT_APPLICATION_MIME_TYPE_LOAD",vr::VREvent_ApplicationMimeTypeLoad},
+		{"EVENT_PROCESS_CONNECTED",vr::VREvent_ProcessConnected},
+		{"EVENT_PROCESS_DISCONNECTED",vr::VREvent_ProcessDisconnected},
+		{"EVENT_COMPOSITOR_CHAPERONE_BOUNDS_SHOWN",vr::VREvent_Compositor_ChaperoneBoundsShown},
+		{"EVENT_COMPOSITOR_CHAPERONE_BOUNDS_HIDDEN",vr::VREvent_Compositor_ChaperoneBoundsHidden},
+		{"EVENT_COMPOSITOR_DISPLAY_DISCONNECTED",vr::VREvent_Compositor_DisplayDisconnected},
+		{"EVENT_COMPOSITOR_DISPLAY_RECONNECTED",vr::VREvent_Compositor_DisplayReconnected},
+		{"EVENT_COMPOSITOR_HDCP_ERROR",vr::VREvent_Compositor_HDCPError},
+		{"EVENT_COMPOSITOR_APPLICATION_NOT_RESPONDING",vr::VREvent_Compositor_ApplicationNotResponding},
+		{"EVENT_COMPOSITOR_APPLICATION_RESUMED",vr::VREvent_Compositor_ApplicationResumed},
+		{"EVENT_COMPOSITOR_OUT_OF_VIDEO_MEMORY",vr::VREvent_Compositor_OutOfVideoMemory},
+		{"EVENT_COMPOSITOR_DISPLAY_MODE_NOT_SUPPORTED",vr::VREvent_Compositor_DisplayModeNotSupported},
+		{"EVENT_COMPOSITOR_STAGE_OVERRIDE_READY",vr::VREvent_Compositor_StageOverrideReady},
+		{"EVENT_TRACKED_CAMERA_START_VIDEO_STREAM",vr::VREvent_TrackedCamera_StartVideoStream},
+		{"EVENT_TRACKED_CAMERA_STOP_VIDEO_STREAM",vr::VREvent_TrackedCamera_StopVideoStream},
+		{"EVENT_TRACKED_CAMERA_PAUSE_VIDEO_STREAM",vr::VREvent_TrackedCamera_PauseVideoStream},
+		{"EVENT_TRACKED_CAMERA_RESUME_VIDEO_STREAM",vr::VREvent_TrackedCamera_ResumeVideoStream},
+		{"EVENT_TRACKED_CAMERA_EDITING_SURFACE",vr::VREvent_TrackedCamera_EditingSurface},
+		{"EVENT_PERFORMANCE_TEST_ENABLE_CAPTURE",vr::VREvent_PerformanceTest_EnableCapture},
+		{"EVENT_PERFORMANCE_TEST_DISABLE_CAPTURE",vr::VREvent_PerformanceTest_DisableCapture},
+		{"EVENT_PERFORMANCE_TEST_FIDELITY_LEVEL",vr::VREvent_PerformanceTest_FidelityLevel},
+		{"EVENT_MESSAGE_OVERLAY_CLOSED",vr::VREvent_MessageOverlay_Closed},
+		{"EVENT_MESSAGE_OVERLAY_CLOSE_REQUESTED",vr::VREvent_MessageOverlayCloseRequested},
+		{"EVENT_INPUT_HAPTIC_VIBRATION",vr::VREvent_Input_HapticVibration},
+		{"EVENT_INPUT_BINDING_LOAD_FAILED",vr::VREvent_Input_BindingLoadFailed},
+		{"EVENT_INPUT_BINDING_LOAD_SUCCESSFUL",vr::VREvent_Input_BindingLoadSuccessful},
+		{"EVENT_INPUT_ACTION_MANIFEST_RELOADED",vr::VREvent_Input_ActionManifestReloaded},
+		{"EVENT_INPUT_ACTION_MANIFEST_LOAD_FAILED",vr::VREvent_Input_ActionManifestLoadFailed},
+		{"EVENT_INPUT_PROGRESS_UPDATE",vr::VREvent_Input_ProgressUpdate},
+		{"EVENT_INPUT_TRACKER_ACTIVATED",vr::VREvent_Input_TrackerActivated},
+		{"EVENT_INPUT_BINDINGS_UPDATED",vr::VREvent_Input_BindingsUpdated},
+		{"EVENT_INPUT_BINDING_SUBSCRIPTION_CHANGED",vr::VREvent_Input_BindingSubscriptionChanged},
+		{"EVENT_SPATIAL_ANCHORS_POSE_UPDATED",vr::VREvent_SpatialAnchors_PoseUpdated},
+		{"EVENT_SPATIAL_ANCHORS_DESCRIPTOR_UPDATED",vr::VREvent_SpatialAnchors_DescriptorUpdated},
+		{"EVENT_SPATIAL_ANCHORS_REQUEST_POSE_UPDATE",vr::VREvent_SpatialAnchors_RequestPoseUpdate},
+		{"EVENT_SPATIAL_ANCHORS_REQUEST_DESCRIPTOR_UPDATE",vr::VREvent_SpatialAnchors_RequestDescriptorUpdate},
+		{"EVENT_SYSTEM_REPORT_STARTED",vr::VREvent_SystemReport_Started},
+		{"EVENT_MONITOR_SHOW_HEADSET_VIEW",vr::VREvent_Monitor_ShowHeadsetView},
+		{"EVENT_MONITOR_HIDE_HEADSET_VIEW",vr::VREvent_Monitor_HideHeadsetView}
 	};
 	Lua::RegisterLibraryEnums(lua,"openvr",initErrorEnums);
 
