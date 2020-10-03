@@ -24,6 +24,7 @@
 #include "vr_eye.hpp"
 #include "lopenvr.h"
 #include "wvmodule.h"
+#include <glm/gtx/matrix_decompose.hpp>
 
 std::unique_ptr<openvr::Instance> s_vrInstance = nullptr;
 
@@ -851,6 +852,62 @@ int Lua::openvr::lib::get_pose_transform(lua_State *l)
 	return 2;
 }
 
+static umath::Transform openvr_matrix_to_pragma_pose(const Mat4 &poseMatrix)
+{
+	Vector3 scale;
+	Vector3 skew;
+	::Vector4 perspective;
+	Vector3 pos;
+	Quat rot;
+	glm::decompose(poseMatrix,scale,rot,pos,skew,perspective);
+	rot = glm::conjugate(rot);
+			
+	static auto openVrToPragmaPoseTransform = uquat::create(EulerAngles(0.f,180.f,0.f));
+	rot = rot *openVrToPragmaPoseTransform;
+	pos *= static_cast<float>(::util::pragma::metres_to_units(1.f));
+	return umath::Transform {pos,rot};
+}
+
+int Lua::openvr::lib::get_pose(lua_State *l)
+{
+	if(s_vrInstance == nullptr)
+		return 0;
+	auto deviceIdx = Lua::CheckInt(l,1);
+	vr::TrackedDevicePose_t pose {};
+	Mat4 m {};
+	//if(s_vrInstance->GetPoseTransform(deviceIdx,pose,m) == false)
+	//	return 0;
+	m = s_vrInstance->GetPoseMatrix(deviceIdx);
+
+	m = glm::inverse(m);
+	auto mpose = openvr_matrix_to_pragma_pose(m);
+
+#if 0
+	auto o = mpose.GetOrigin();
+	auto pos0 = Vector3{m[3][0],m[3][1],m[3][2]};
+	std::cout<<"Test:"<<std::endl;
+	std::cout<<o.x<<","<<o.y<<","<<o.z<<std::endl;
+	std::cout<<pos0.x<<","<<pos0.y<<","<<pos0.z<<std::endl;
+#endif
+
+	// For some reason the position from GetPoseMatrix (which comes from WaitGetPoses)
+	// is incorrect, but the rotation is correct, while for GetPoseTransform it's the other way around.
+	// We're probably doing something wrong somewhere, but for now this will do as a work-around.
+	// TODO: FIXME
+	vr::TrackedDevicePose_t pose2 {};
+	Mat4 m2 {};
+	if(s_vrInstance->GetPoseTransform(deviceIdx,pose2,m2))
+	{
+		auto &pos = mpose.GetOrigin();
+		pos = {m2[3][0],m2[3][1],m2[3][2]};
+		pos *= static_cast<float>(::util::pragma::metres_to_units(1.f));
+	}
+
+	Lua::Push<umath::Transform>(l,mpose);
+	Lua::Push<Vector3>(l,Vector3(pose.vVelocity.v[0],pose.vVelocity.v[1],pose.vVelocity.v[2]) *static_cast<float>(::util::pragma::metres_to_units(1.f)));
+	return 2;
+}
+
 static void add_event_data(const vr::VREvent_t &ev,luabind::object &t)
 {
 	switch(ev.eventType)
@@ -1098,15 +1155,24 @@ void Lua::openvr::register_lua_library(Lua::Interface &l)
 		{"get_controller_state_with_pose",Lua::openvr::lib::get_controller_state_with_pose},
 
 		{"get_pose_transform",Lua::openvr::lib::get_pose_transform},
+		{"get_pose",Lua::openvr::lib::get_pose},
 		{"update_poses",static_cast<int32_t(*)(lua_State*)>([](lua_State *l) -> int32_t {
 			if(s_vrInstance)
 				s_vrInstance->UpdateHMDPoses();
 			return 0;
 		})},
-		{"get_pose_matrix",static_cast<int32_t(*)(lua_State*)>([](lua_State *l) -> int32_t {
+		{"get_hmd_pose_matrix",static_cast<int32_t(*)(lua_State*)>([](lua_State *l) -> int32_t {
 			if(s_vrInstance == nullptr)
 				return 0;
 			Lua::Push<Mat4>(l,s_vrInstance->GetHMDPoseMatrix());
+			return 1;
+		})},
+		{"get_hmd_pose",static_cast<int32_t(*)(lua_State*)>([](lua_State *l) -> int32_t {
+			if(s_vrInstance == nullptr)
+				return 0;
+			auto &hmdPoseMatrix = s_vrInstance->GetHMDPoseMatrix();
+			auto pose = openvr_matrix_to_pragma_pose(hmdPoseMatrix);
+			Lua::Push<umath::Transform>(l,pose);
 			return 1;
 		})},
 		{"get_eye",static_cast<int32_t(*)(lua_State*)>([](lua_State *l) -> int32_t {

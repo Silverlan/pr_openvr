@@ -184,6 +184,7 @@ namespace openvr
 		std::optional<CommandBufferInfo> StartRecording();
 		void StopRecording();
 		const Mat4 &GetHMDPoseMatrix() const;
+		const Mat4 &GetPoseMatrix(uint32_t deviceIndex) const;
 		const std::vector<vr::VREvent_t> &PollEvents();
 	private:
 		Instance(vr::IVRSystem *system,RenderAPI renderAPI,vr::IVRRenderModels *i,vr::IVRCompositor *compositor

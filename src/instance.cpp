@@ -174,7 +174,191 @@ std::string openvr::to_string(uint32_t ev)
 			return "Performance test disable capture";
 		case vr::EVREventType::VREvent_PerformanceTest_FidelityLevel:
 			return "Performance test fidelity level";
+		case vr::EVREventType::VREvent_WatchdogWakeUpRequested:
+			return "Watchdog wake up requested";
+		case vr::EVREventType::VREvent_LensDistortionChanged:
+			return "Lens distortion changed";
+		case vr::EVREventType::VREvent_PropertyChanged:
+			return "Property changed";
+		case vr::EVREventType::VREvent_WirelessDisconnect:
+			return "Wireless disconnect";
+		case vr::EVREventType::VREvent_WirelessReconnect:
+			return "Wireless reconnect";
+		case vr::EVREventType::VREvent_Modal_Cancel:
+			return "Modal cancel";
+		case vr::EVREventType::VREvent_OverlayFocusChanged:
+			return "Overlay focus changed";
+		case vr::EVREventType::VREvent_ReloadOverlays:
+			return "Reload overlays";
+		case vr::EVREventType::VREvent_LockMousePosition:
+			return "Lock mouse position";
+		case vr::EVREventType::VREvent_UnlockMousePosition:
+			return "Unlock mouse position";
+		case vr::EVREventType::VREvent_InputFocusChanged:
+			return "Input focus changed";
+		case vr::EVREventType::VREvent_SceneApplicationUsingWrongGraphicsAdapter:
+			return "Scene application using wrong graphics adapter";
+		case vr::EVREventType::VREvent_ActionBindingReloaded:
+			return "Action binding reloaded";
+		case vr::EVREventType::VREvent_SceneApplicationStateChanged:
+			return "Scene application state changed";
+		case vr::EVREventType::VREvent_ConsoleOpened:
+			return "Console opened";
+		case vr::EVREventType::VREvent_ConsoleClosed:
+			return "Console closed";
+		case vr::EVREventType::VREvent_ScreenshotTriggered:
+			return "Screenshot triggered";
+		case vr::EVREventType::VREvent_ImageFailed:
+			return "Image failed";
+		case vr::EVREventType::VREvent_DashboardOverlayCreated:
+			return "Dashboard overlay created";
+		case vr::EVREventType::VREvent_SwitchGamepadFocus:
+			return "Switch gamepad focus";
+		case vr::EVREventType::VREvent_RequestScreenshot:
+			return "Request screenshot";
+		case vr::EVREventType::VREvent_ScreenshotTaken:
+			return "Screenshot taken";
+		case vr::EVREventType::VREvent_ScreenshotFailed:
+			return "Screenshot failed";
+		case vr::EVREventType::VREvent_SubmitScreenshotToDashboard:
+			return "Submit screenshot to dashboard";
+		case vr::EVREventType::VREvent_ScreenshotProgressToDashboard:
+			return "Screenshot progress to dashboard";
+		case vr::EVREventType::VREvent_PrimaryDashboardDeviceChanged:
+			return "Primary dashboard device changed";
+		case vr::EVREventType::VREvent_RoomViewShown:
+			return "Room view shown";
+		case vr::EVREventType::VREvent_RoomViewHidden:
+			return "Room view hidden";
+		case vr::EVREventType::VREvent_ShowUI:
+			return "Show UI";
+		case vr::EVREventType::VREvent_ShowDevTools:
+			return "Show dev tools";
+		case vr::EVREventType::VREvent_DesktopViewUpdating:
+			return "Desktop view updating";
+		case vr::EVREventType::VREvent_DesktopViewReady:
+			return "Desktop view ready";
+		case vr::EVREventType::VREvent_DriverRequestedQuit:
+			return "Driver requested quit";
+		case vr::EVREventType::VREvent_RestartRequested:
+			return "Restart requested";
+		case vr::EVREventType::VREvent_ChaperoneFlushCache:
+			return "Chaperone flush cache";
+		case vr::EVREventType::VREvent_ChaperoneRoomSetupStarting:
+			return "Chaperone room setup starting";
+		case vr::EVREventType::VREvent_ChaperoneRoomSetupFinished:
+			return "Chaperone room setup finished";
+		case vr::EVREventType::VREvent_StandingZeroPoseReset:
+			return "Standing zero pose reset";
+		case vr::EVREventType::VREvent_AudioSettingsHaveChanged:
+			return "Audio settings have changed";
+		case vr::EVREventType::VREvent_ReprojectionSettingHasChanged:
+			return "Reprojection setting has changed";
+		case vr::EVREventType::VREvent_ModelSkinSettingsHaveChanged:
+			return "Model skin settings have changed";
+		case vr::EVREventType::VREvent_EnvironmentSettingsHaveChanged:
+			return "Environment settings have changed";
+		case vr::EVREventType::VREvent_PowerSettingsHaveChanged:
+			return "Power settings have changed";
+		case vr::EVREventType::VREvent_EnableHomeAppSettingsHaveChanged:
+			return "Enable home app settings have changed";
+		case vr::EVREventType::VREvent_SteamVRSectionSettingChanged:
+			return "SteamVR section setting changed";
+		case vr::EVREventType::VREvent_LighthouseSectionSettingChanged:
+			return "Lighthouse section setting changed";
+		case vr::EVREventType::VREvent_NullSectionSettingChanged:
+			return "Null section setting changed";
+		case vr::EVREventType::VREvent_UserInterfaceSectionSettingChanged:
+			return "User interface section setting changed";
+		case vr::EVREventType::VREvent_NotificationsSectionSettingChanged:
+			return "Notification section setting changed";
+		case vr::EVREventType::VREvent_KeyboardSectionSettingChanged:
+			return "Keyboard section setting changed";
+		case vr::EVREventType::VREvent_PerfSectionSettingChanged:
+			return "Perf section setting changed";
+		case vr::EVREventType::VREvent_DashboardSectionSettingChanged:
+			return "Dashboard section setting changed";
+		case vr::EVREventType::VREvent_WebInterfaceSectionSettingChanged:
+			return "Web interface section setting changed";
+		case vr::EVREventType::VREvent_TrackersSectionSettingChanged:
+			return "Trackers section setting changed";
+		case vr::EVREventType::VREvent_LastKnownSectionSettingChanged:
+			return "Last known section setting changed";
+		case vr::EVREventType::VREvent_DismissedWarningsSectionSettingChanged:
+			return "Dismissed warnings section setting changed";
+		case vr::EVREventType::VREvent_GpuSpeedSectionSettingChanged:
+			return "GPU speed section setting changed";
+		case vr::EVREventType::VREvent_WindowsMRSectionSettingChanged:
+			return "Windows MR section setting changed";
+		case vr::EVREventType::VREvent_OtherSectionSettingChanged:
+			return "Other section setting changed";
+		case vr::EVREventType::VREvent_WebInterface_InstallDriverCompleted :
+			return "Web interface install driver completed";
+		case vr::EVREventType::VREvent_ApplicationListUpdated:
+			return "Application list updated";
+		case vr::EVREventType::VREvent_ApplicationMimeTypeLoad:
+			return "Application mime type load";
+		case vr::EVREventType::VREvent_ProcessConnected:
+			return "Process connected";
+		case vr::EVREventType::VREvent_ProcessDisconnected:
+			return "Process disconnected";
+		case vr::EVREventType::VREvent_Compositor_DisplayDisconnected:
+			return "Compositor display connected";
+		case vr::EVREventType::VREvent_Compositor_DisplayReconnected:
+			return "Compositor display reconnected";
+		case vr::EVREventType::VREvent_Compositor_HDCPError:
+			return "Compositor HDCP error";
+		case vr::EVREventType::VREvent_Compositor_ApplicationNotResponding:
+			return "Compositor application not responding";
+		case vr::EVREventType::VREvent_Compositor_ApplicationResumed:
+			return "Compositor application resumed";
+		case vr::EVREventType::VREvent_Compositor_OutOfVideoMemory:
+			return "Compositor out of video memory";
+		case vr::EVREventType::VREvent_Compositor_DisplayModeNotSupported:
+			return "Compositor display mode not supported";
+		case vr::EVREventType::VREvent_Compositor_StageOverrideReady:
+			return "Compositor stage override ready";
+		case vr::EVREventType::VREvent_TrackedCamera_EditingSurface:
+			return "Tracked camera editing surface";
+		case vr::EVREventType::VREvent_MessageOverlay_Closed:
+			return "Message overlay closed";
+		case vr::EVREventType::VREvent_MessageOverlayCloseRequested:
+			return "Message overlay close requested";
+		case vr::EVREventType::VREvent_Input_HapticVibration:
+			return "Input haptic vibration";
+		case vr::EVREventType::VREvent_Input_BindingLoadFailed:
+			return "Input binding load failed";
+		case vr::EVREventType::VREvent_Input_BindingLoadSuccessful:
+			return "Input binding load successful";
+		case vr::EVREventType::VREvent_Input_ActionManifestReloaded:
+			return "Input action manifest reloaded";
+		case vr::EVREventType::VREvent_Input_ActionManifestLoadFailed:
+			return "Input action manifest load failed";
+		case vr::EVREventType::VREvent_Input_ProgressUpdate:
+			return "Input progress update";
+		case vr::EVREventType::VREvent_Input_TrackerActivated:
+			return "Input tracker activated";
+		case vr::EVREventType::VREvent_Input_BindingsUpdated:
+			return "Input bindings updated";
+		case vr::EVREventType::VREvent_Input_BindingSubscriptionChanged :
+			return "Input binding subscription changed";
+		case vr::EVREventType::VREvent_SpatialAnchors_PoseUpdated:
+			return "Spatial anchors pose updated";
+		case vr::EVREventType::VREvent_SpatialAnchors_DescriptorUpdated :
+			return "Spatial anchors descriptor updated";
+		case vr::EVREventType::VREvent_SpatialAnchors_RequestPoseUpdate :
+			return "Spatial anchors request pose update";
+		case vr::EVREventType::VREvent_SpatialAnchors_RequestDescriptorUpdate :
+			return "Spatial anchors request descriptor update";
+		case vr::EVREventType::VREvent_SystemReport_Started:
+			return "System report started";
+		case vr::EVREventType::VREvent_Monitor_ShowHeadsetView:
+			return "Monitor show headset view";
+		case vr::EVREventType::VREvent_Monitor_HideHeadsetView:
+			return "Monitor hide headset view";
 	}
+	if(ev >= vr::EVREventType::VREvent_VendorSpecific_Reserved_Start && ev <= vr::EVREventType::VREvent_VendorSpecific_Reserved_End)
+		return "Unknown (Vendor specific)";
 	return "Invalid";
 }
 
@@ -319,6 +503,7 @@ Mat4 openvr::steam_vr_matrix_to_engine_matrix(const vr::HmdMatrix34_t &matPose)
 }
 
 const Mat4 &Instance::GetHMDPoseMatrix() const {return m_hmdPoseMatrix;}
+const Mat4 &Instance::GetPoseMatrix(uint32_t deviceIndex) const {return m_poseTransforms.at(deviceIndex);}
 
 void Instance::UpdateHMDPoses()
 {
@@ -346,7 +531,7 @@ void Instance::UpdateHMDPoses()
 	if(hmdPose.bPoseIsValid == true)
 	{
 		m_hmdPoseMatrix = m_poseTransforms.at(vr::k_unTrackedDeviceIndex_Hmd);
-		m_hmdPoseMatrix = glm::inverse(m_hmdPoseMatrix);
+		//m_hmdPoseMatrix = glm::inverse(m_hmdPoseMatrix);
 	}
 }
 
@@ -703,6 +888,7 @@ bool Instance::GetPoseTransform(uint32_t deviceIdx,vr::TrackedDevicePose_t &pose
 	m = steam_vr_matrix_to_engine_matrix(pose.mDeviceToAbsoluteTracking);
 	if(std::isnan(m[0][0]))
 		return false;
+	// m = glm::inverse(m);
 	return true;
 }
 
