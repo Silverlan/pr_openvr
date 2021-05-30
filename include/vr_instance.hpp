@@ -32,6 +32,12 @@ namespace openvr
 	std::string to_string(vr::ETrackedPropertyError err);
 	std::string to_string(vr::EVRInitError err);
 	Mat4 steam_vr_matrix_to_engine_matrix(const vr::HmdMatrix34_t &matPose);
+
+	class IInstance
+	{
+
+	};
+
 	class Instance
 	{
 	public:
@@ -42,8 +48,6 @@ namespace openvr
 		Eye &GetRightEye();
 		const Eye &GetRightEye() const;
 
-		bool InitializeScene();
-		void ClearScene();
 		void SetControllerStateCallback(const std::function<void(uint32_t,uint32_t,GLFW::KeyState)> &callback);
 		std::string GetTrackedDeviceString(vr::TrackedDeviceProperty prop,vr::TrackedPropertyError *peError=nullptr) const;
 		bool GetTrackedDeviceBool(vr::TrackedDeviceProperty prop,vr::TrackedPropertyError *peError=nullptr) const;
@@ -176,13 +180,6 @@ namespace openvr
 
 		void UpdateHMDPoses();
 
-		struct CommandBufferInfo
-		{
-			std::shared_ptr<prosper::IPrimaryCommandBuffer> commandBuffer;
-			std::shared_ptr<prosper::IFence> fence;
-		};
-		std::optional<CommandBufferInfo> StartRecording();
-		void StopRecording();
 		const Mat4 &GetHMDPoseMatrix() const;
 		const Mat4 &GetPoseMatrix(uint32_t deviceIndex) const;
 		const std::vector<vr::VREvent_t> &PollEvents();
@@ -210,10 +207,6 @@ namespace openvr
 		std::function<void(uint32_t,uint32_t,GLFW::KeyState)> m_controllerStateCallback = nullptr;
 		bool m_bHmdViewEnabled = false;
 		RenderAPI m_renderAPI = RenderAPI::OpenGL;
-		CallbackHandle m_cbThink;
-
-		std::deque<CommandBufferInfo> m_commandBuffers = {};
-		std::optional<CommandBufferInfo> m_activeCommandBuffer = {};
 
 		void OnControllerStateChanged(uint32_t controllerId,uint32_t key,GLFW::KeyState state);
 		vr::EVRCompositorError SetSkyboxOverride(const std::vector<prosper::IImage*> &images) const;

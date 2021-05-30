@@ -18,7 +18,7 @@
 #include <prosper_command_buffer.hpp>
 #include <pragma/entities/entity_component_system_t.hpp>
 
-extern DLLCENGINE CEngine *c_engine;
+extern DLLCLIENT CEngine *c_engine;
 extern DLLCLIENT CGame *c_game;
 
 openvr::Eye::Eye(Instance &instance,vr::EVREye eye)
@@ -27,13 +27,6 @@ openvr::Eye::Eye(Instance &instance,vr::EVREye eye)
 
 openvr::Eye::~Eye() {}
 
-bool openvr::Eye::Initialize(Instance &instance)
-{
-#if LOPENVR_VERBOSE == 1
-		std::cout<<"[VR] Initializing eye..."<<std::endl;
-#endif
-	return true;
-}
 void openvr::Eye::ClearImage() {m_image = nullptr;}
 void openvr::Eye::SetImage(prosper::IImage &img)
 {

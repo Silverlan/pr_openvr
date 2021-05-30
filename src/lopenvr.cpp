@@ -15,7 +15,7 @@
 #include <pragma/physics/collision_object.hpp>
 #include <pragma/lua/c_lentity_handles.hpp>
 #include <pragma/entities/environment/c_env_camera.h>
-#include <pragma/rendering/scene/scene.h>
+#include <pragma/entities/components/c_scene_component.hpp>
 #include <luainterface.hpp>
 #include <sharedutils/functioncallback.h>
 #include <pragma/pragma_module.hpp>
@@ -25,7 +25,7 @@
 #include "lopenvr.h"
 #include "wvmodule.h"
 #include <glm/gtx/matrix_decompose.hpp>
-
+#pragma optimize("",off)
 std::unique_ptr<openvr::Instance> s_vrInstance = nullptr;
 
 static openvr::Eye &get_eye(lua_State *l,int32_t eyeIdIndex)
@@ -37,48 +37,6 @@ static openvr::Eye &get_eye(lua_State *l,int32_t eyeIdIndex)
 		return s_vrInstance->GetLeftEye();
 	default:
 		return s_vrInstance->GetRightEye();
-	}
-}
-
-class Game;
-class CGame;
-static CallbackHandle cbGameStarted;
-static CallbackHandle cbGameInitialized;
-static CallbackHandle cbGameEnd;
-static void initialize_instance()
-{
-	if(IState::is_game_initialized() == true)
-	{
-		if(s_vrInstance != nullptr)
-			s_vrInstance->InitializeScene();
-	}
-	else
-	{
-		if(IState::is_game_active())
-		{
-			cbGameInitialized = IState::add_callback(IState::Callback::OnGameInitialized,FunctionCallback<void,Game*>::Create([](Game *game) {
-				if(cbGameInitialized.IsValid())
-					cbGameInitialized.Remove();
-				if(s_vrInstance != nullptr)
-					s_vrInstance->InitializeScene();
-			}));
-		}
-		cbGameStarted = IState::add_callback(IState::Callback::OnGameStart,FunctionCallback<void,CGame*>::Create([](CGame *game) {
-			if(cbGameInitialized.IsValid())
-				return;
-			cbGameInitialized = IState::add_callback(IState::Callback::OnGameInitialized,FunctionCallback<void,Game*>::Create([](Game *game) {
-				if(cbGameInitialized.IsValid())
-					cbGameInitialized.Remove();
-				if(s_vrInstance != nullptr)
-					s_vrInstance->InitializeScene();
-			}));
-		}));
-		cbGameEnd = IState::add_callback(IState::Callback::EndGame,FunctionCallback<void,CGame*>::Create([](CGame *game) {
-			if(cbGameInitialized.IsValid())
-				cbGameInitialized.Remove();
-			if(s_vrInstance != nullptr)
-				s_vrInstance->ClearScene();
-		}));
 	}
 }
 
@@ -120,7 +78,6 @@ extern "C"
 #if LOPENVR_VERBOSE == 1
 		std::cout<<"[VR] Initializing vr instance..."<<std::endl;
 #endif
-		initialize_instance();
 		auto r = (err == vr::EVRInitError::VRInitError_None) ? true : false;
 		if(r == true)
 			s_vrInstance->HideMirrorWindow();
@@ -131,21 +88,20 @@ extern "C"
 	}
 };
 
-extern "C"
+int run_openxr_demo(int argc, char* argv[]);
+#include <prosper_window.hpp>
+GLFW::Window *get_glfw_window()
 {
-	PRAGMA_EXPORT void pragma_detach()
-	{
-		if(cbGameStarted.IsValid())
-			cbGameStarted.Remove();
-		if(cbGameInitialized.IsValid())
-			cbGameInitialized.Remove();
-		if(cbGameEnd.IsValid())
-			cbGameEnd.Remove();
-	}
-};
+	return &*pragma::get_cengine()->GetRenderContext().GetWindow();
+}
 
+//#include "openxr/pvr_openxr_instance.hpp"
 int Lua::openvr::lib::initialize(lua_State *l)
 {
+	//static auto instance = pvr::XrInstance::Create();
+	//for(;;)
+	//	instance->Render();
+	//return 0;
 	vr::EVRInitError err;
 	if(s_vrInstance != nullptr)
 		err = vr::EVRInitError::VRInitError_None;
@@ -154,7 +110,6 @@ int Lua::openvr::lib::initialize(lua_State *l)
 		std::vector<std::string> reqInstanceExtensions;
 		std::vector<std::string> reqDeviceExtensions;
 		s_vrInstance = ::openvr::Instance::Create(&err,reqInstanceExtensions,reqDeviceExtensions);
-		initialize_instance();
 	}
 	Lua::PushInt(l,static_cast<uint32_t>(err));
 	return 1;
@@ -560,8 +515,9 @@ int Lua::openvr::lib::get_recommended_render_target_size(lua_State *l)
 {
 	if(s_vrInstance == nullptr)
 	{
-		Lua::PushInt(l,0);
-		Lua::PushInt(l,0);
+		// Standard Vive resolution (per eye)
+		Lua::PushInt(l,1'080);
+		Lua::PushInt(l,1'200);
 	}
 	else
 	{
@@ -903,6 +859,13 @@ int Lua::openvr::lib::get_pose(lua_State *l)
 		pos *= static_cast<float>(::util::pragma::metres_to_units(1.f));
 	}
 
+	static auto applyRotCorrection = true;
+	if(applyRotCorrection)
+	{
+		static auto correctionRotation = uquat::create(EulerAngles{0.f,180.f,0.f});
+		mpose.RotateGlobal(correctionRotation);
+	}
+
 	Lua::Push<umath::Transform>(l,mpose);
 	Lua::Push<Vector3>(l,Vector3(pose.vVelocity.v[0],pose.vVelocity.v[1],pose.vVelocity.v[2]) *static_cast<float>(::util::pragma::metres_to_units(1.f)));
 	return 2;
@@ -1163,16 +1126,20 @@ void Lua::openvr::register_lua_library(Lua::Interface &l)
 		})},
 		{"get_hmd_pose_matrix",static_cast<int32_t(*)(lua_State*)>([](lua_State *l) -> int32_t {
 			if(s_vrInstance == nullptr)
-				return 0;
-			Lua::Push<Mat4>(l,s_vrInstance->GetHMDPoseMatrix());
+				Lua::Push<Mat4>(l,umat::identity());
+			else
+				Lua::Push<Mat4>(l,s_vrInstance->GetHMDPoseMatrix());
 			return 1;
 		})},
 		{"get_hmd_pose",static_cast<int32_t(*)(lua_State*)>([](lua_State *l) -> int32_t {
 			if(s_vrInstance == nullptr)
-				return 0;
-			auto &hmdPoseMatrix = s_vrInstance->GetHMDPoseMatrix();
-			auto pose = openvr_matrix_to_pragma_pose(hmdPoseMatrix);
-			Lua::Push<umath::Transform>(l,pose);
+				Lua::Push<umath::Transform>(l,umath::Transform{});
+			else
+			{
+				auto &hmdPoseMatrix = s_vrInstance->GetHMDPoseMatrix();
+				auto pose = openvr_matrix_to_pragma_pose(hmdPoseMatrix);
+				Lua::Push<umath::Transform>(l,pose);
+			}
 			return 1;
 		})},
 		{"get_eye",static_cast<int32_t(*)(lua_State*)>([](lua_State *l) -> int32_t {
@@ -1184,35 +1151,13 @@ void Lua::openvr::register_lua_library(Lua::Interface &l)
 		})},
 		{"submit_eye",static_cast<int32_t(*)(lua_State*)>([](lua_State *l) -> int32_t {
 			if(s_vrInstance == nullptr)
-				return 0;
+			{
+				Lua::PushInt(l,vr::EVRCompositorError::VRCompositorError_None);
+				return 1;
+			}
 			auto &eye = get_eye(l,1);
 			Lua::PushInt(l,s_vrInstance->GetCompositorInterface()->Submit(eye.GetVREye(),&eye.GetVRTexture()));
 			return 1;
-		})},
-		{"start_recording",static_cast<int32_t(*)(lua_State*)>([](lua_State *l) -> int32_t {
-			if(s_vrInstance == nullptr)
-				return 0;
-			auto cmdBufferInfo = s_vrInstance->StartRecording();
-			if(cmdBufferInfo.has_value() == false)
-				return 0;
-			Lua::Push<std::shared_ptr<Lua::Vulkan::CommandBuffer>>(l,cmdBufferInfo->commandBuffer);
-			Lua::Push<Lua::Vulkan::Fence*>(l,cmdBufferInfo->fence.get());
-			return 2;
-		})},
-		{"stop_recording",static_cast<int32_t(*)(lua_State*)>([](lua_State *l) -> int32_t {
-			if(s_vrInstance == nullptr)
-				return 0;
-			s_vrInstance->StopRecording();
-			return 0;
-		})},
-		{"get_recommended_render_target_size",static_cast<int32_t(*)(lua_State*)>([](lua_State *l) -> int32_t {
-			if(s_vrInstance == nullptr)
-				return 0;
-			uint32_t width,height;
-			s_vrInstance->GetSystemInterface()->GetRecommendedRenderTargetSize(&width,&height);
-			Lua::PushInt(l,width);
-			Lua::PushInt(l,height);
-			return 2;
 		})},
 		{"set_eye_image",static_cast<int32_t(*)(lua_State*)>([](lua_State *l) -> int32_t {
 			if(s_vrInstance == nullptr)
@@ -1224,9 +1169,12 @@ void Lua::openvr::register_lua_library(Lua::Interface &l)
 			return 0;
 		})},
 		{"poll_events",static_cast<int32_t(*)(lua_State*)>([](lua_State *l) -> int32_t {
-			if(s_vrInstance == nullptr)
-				return 0;
 			auto t = luabind::newtable(l);
+			if(s_vrInstance == nullptr)
+			{
+				t.push(l);
+				return 1;
+			}
 			int32_t idx = 1;
 			for(auto &ev : s_vrInstance->PollEvents())
 			{
@@ -1240,8 +1188,27 @@ void Lua::openvr::register_lua_library(Lua::Interface &l)
 			}
 			t.push(l);
 			return 1;
-		})}
+		})},
+		{"is_instance_valid",static_cast<int32_t(*)(lua_State*)>([](lua_State *l) -> int32_t {
+			Lua::Push(l,s_vrInstance != nullptr);
+			return 1;
+		})},
+		/*{"run_openxr_demo",static_cast<int32_t(*)(lua_State*)>([](lua_State *l) -> int32_t {
+			std::vector<char*> args = {
+				"",
+				"-g",
+				"Vulkan2",
+				"-ff",
+				"Hmd",
+				"-vc",
+				"Stereo",
+				"-v"
+			};
+			run_openxr_demo(args.size(),args.data());
+			return 0;
+		})}*/
 	});
+	//int run_openxr_demo(int argc, char* argv[]) {
 
 	std::unordered_map<std::string,lua_Integer> propErrorEnums {
 		{"TRACKED_PROPERTY_ERROR_SUCCESS",static_cast<int32_t>(vr::ETrackedPropertyError::TrackedProp_Success)},
@@ -1580,4 +1547,4 @@ void Lua::openvr::register_lua_library(Lua::Interface &l)
 	;
 	modVr[classDefControllerState];
 }
-
+#pragma optimize("",on)

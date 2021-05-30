@@ -20,7 +20,6 @@ namespace openvr
 	public:
 		Eye(Instance &instance,vr::EVREye eye);
 		~Eye();
-		bool Initialize(Instance &instance);
 
 		void SetImage(prosper::IImage &src);
 		void ClearImage();

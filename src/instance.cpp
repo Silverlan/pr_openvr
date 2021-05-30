@@ -22,7 +22,7 @@
 #include <iostream>
 #endif
 
-extern DLLCENGINE CEngine *c_engine;
+extern DLLCLIENT CEngine *c_engine;
 extern DLLCLIENT CGame *c_game;
 
 using namespace openvr;
@@ -430,18 +430,12 @@ Instance::Instance(vr::IVRSystem *system,RenderAPI renderAPI,vr::IVRRenderModels
 	m_rightEye = std::make_unique<Eye>(*this,vr::EVREye::Eye_Right);
 	auto *shaderFlip = IState::get_shader("screen_flip_y");
 	m_hShaderFlip = (shaderFlip != nullptr) ? shaderFlip->GetHandle() : util::WeakHandle<prosper::Shader>{};
-	//m_cbThink = IState::add_callback(IState::Callback::Think,FunctionCallback<void>::Create([this]() {
-	//	PollEvents();
-	//}));
 #ifdef _DEBUG
 	m_compositor->ShowMirrorWindow();
 #endif
 }
 Instance::~Instance()
 {
-	if(m_cbThink.IsValid())
-		m_cbThink.Remove();
-
 	vr::VR_Shutdown();
 }
 const std::vector<vr::VREvent_t> &Instance::PollEvents()
@@ -474,19 +468,14 @@ void Instance::OnControllerStateChanged(uint32_t controllerId,uint32_t key,GLFW:
 	m_controllerStateCallback(controllerId,key,state);
 }
 void Instance::SetControllerStateCallback(const std::function<void(uint32_t,uint32_t,GLFW::KeyState)> &callback) {m_controllerStateCallback = callback;}
-bool Instance::InitializeScene()
+/*bool Instance::InitializeScene()
 {
 	auto &context = IState::get_render_context();
 #if LOPENVR_VERBOSE == 1
 		std::cout<<"[VR] Initializing eyes..."<<std::endl;
 #endif
 	return (m_leftEye->Initialize(*this) == true && m_rightEye->Initialize(*this) == true) ? true : false;
-}
-void Instance::ClearScene()
-{
-	m_leftEye->ClearImage();
-	m_rightEye->ClearImage();
-}
+}*/
 openvr::Eye &Instance::GetLeftEye() {return *m_leftEye;}
 const openvr::Eye &Instance::GetLeftEye() const {return const_cast<Instance*>(this)->GetLeftEye();}
 openvr::Eye &Instance::GetRightEye() {return *m_rightEye;}
@@ -544,41 +533,6 @@ static bool check_error(vr::EVRCompositorError err)
 	return false;
 };
 
-std::optional<Instance::CommandBufferInfo> Instance::StartRecording()
-{
-	StopRecording(); // Note: Recording should already have been stopped by the user at this point, this is just a failsafe!
-	if(m_commandBuffers.empty() == false && m_commandBuffers.back().fence->IsSet() == true)
-	{
-		auto cmdBufferInfo = m_commandBuffers.back();
-		cmdBufferInfo.commandBuffer->Reset(true);
-		cmdBufferInfo.fence->Reset();
-		m_commandBuffers.pop_back();
-		if(cmdBufferInfo.commandBuffer->StartRecording() == false)
-			return {};
-		m_activeCommandBuffer = cmdBufferInfo;
-		return m_activeCommandBuffer;
-	}
-	auto &context = const_cast<prosper::IPrContext&>(IState::get_render_context());
-	uint32_t universalQueueFamilyIndex;
-	auto cmdBuffer = context.AllocatePrimaryLevelCommandBuffer(prosper::QueueFamilyType::Universal,universalQueueFamilyIndex);
-	auto fence = context.CreateFence();
-	if(cmdBuffer->StartRecording() == false)
-		return {};
-	m_activeCommandBuffer = CommandBufferInfo{cmdBuffer,fence};
-	return m_activeCommandBuffer;
-}
-void Instance::StopRecording()
-{
-	if(m_activeCommandBuffer.has_value() == false)
-		return;
-	m_activeCommandBuffer->commandBuffer->StopRecording();
-	if(m_renderAPI == RenderAPI::Vulkan)
-		check_error(m_compositor->SubmitExplicitTimingData());
-	m_activeCommandBuffer->commandBuffer->GetContext().SubmitCommandBuffer(*m_activeCommandBuffer->commandBuffer,false,m_activeCommandBuffer->fence.get());
-	m_commandBuffers.push_front(*m_activeCommandBuffer);
-
-	m_activeCommandBuffer = {};
-}
 vr::IVRSystem *Instance::GetSystemInterface() {return m_system;}
 vr::IVRRenderModels *Instance::GetRenderInterface() {return m_renderInterface;}
 vr::IVRCompositor *Instance::GetCompositorInterface() {return m_compositor;}
@@ -642,7 +596,7 @@ std::unique_ptr<Instance> Instance::Create(vr::EVRInitError *err,std::vector<std
 	auto *ivr = vr::VR_Init(err,vr::EVRApplicationType::VRApplication_Scene);
 	if(ivr == nullptr)
 		return nullptr;
-	ScopeGuard guard{[]() {
+	util::ScopeGuard guard{[]() {
 		vr::VR_Shutdown();
 	}};
 	auto *pRenderModels = static_cast<vr::IVRRenderModels*>(vr::VR_GetGenericInterface(vr::IVRRenderModels_Version,err));
