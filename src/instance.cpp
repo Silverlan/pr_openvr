@@ -27,7 +27,6 @@ extern DLLCLIENT CGame *c_game;
 
 using namespace openvr;
 
-#pragma optimize("",off)
 std::string openvr::to_string(uint32_t ev)
 {
 	switch(ev)
@@ -845,5 +844,3 @@ bool Instance::GetPoseTransform(uint32_t deviceIdx,vr::TrackedDevicePose_t &pose
 	// m = glm::inverse(m);
 	return true;
 }
-
-#pragma optimize("",on)

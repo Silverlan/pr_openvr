@@ -25,7 +25,7 @@
 #include "lopenvr.h"
 #include "wvmodule.h"
 #include <glm/gtx/matrix_decompose.hpp>
-#pragma optimize("",off)
+
 std::unique_ptr<openvr::Instance> s_vrInstance = nullptr;
 
 static openvr::Eye &get_eye(lua_State *l,int32_t eyeIdIndex)
@@ -1547,4 +1547,3 @@ void Lua::openvr::register_lua_library(Lua::Interface &l)
 	;
 	modVr[classDefControllerState];
 }
-#pragma optimize("",on)
