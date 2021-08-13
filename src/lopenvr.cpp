@@ -14,8 +14,10 @@
 #include <pragma/physics/physobj.h>
 #include <pragma/physics/collision_object.hpp>
 #include <pragma/lua/c_lentity_handles.hpp>
+#include <pragma/lua/converters/game_type_converters_t.hpp>
 #include <pragma/entities/environment/c_env_camera.h>
 #include <pragma/entities/components/c_scene_component.hpp>
+#include <pragma/c_engine.h>
 #include <luainterface.hpp>
 #include <sharedutils/functioncallback.h>
 #include <pragma/pragma_module.hpp>
@@ -595,11 +597,11 @@ int Lua::openvr::lib::get_eye_to_head_transform(lua_State *l)
 		return 0;
 	auto *sys = s_vrInstance->GetSystemInterface();
 	auto eEye = static_cast<vr::EVREye>(Lua::CheckInt(l,1));
-	auto &hCam = Lua::Check<CCameraHandle>(l,2);
-	if(Lua::CheckComponentHandle(l,hCam) == false)
+	auto *cam = luabind::object_cast_nothrow<pragma::CCameraComponent*>(luabind::object{luabind::from_stack(l,2)},static_cast<pragma::CCameraComponent*>(nullptr));
+	if(!cam)
 		return 0;
 	auto &eye = (eEye == vr::EVREye::Eye_Left) ? s_vrInstance->GetLeftEye() : s_vrInstance->GetRightEye();
-	Lua::Push<Mat4>(l,eye.GetEyeViewMatrix(*hCam));
+	Lua::Push<Mat4>(l,eye.GetEyeViewMatrix(*cam));
 	return 1;
 }
 
@@ -1529,9 +1531,8 @@ void Lua::openvr::register_lua_library(Lua::Interface &l)
 	classDefEye.def("GetProjectionMatrix",static_cast<void(*)(lua_State*,::openvr::Eye&,float,float)>([](lua_State *l,::openvr::Eye &eye,float nearZ,float farZ) {
 		Lua::Push<Mat4>(l,eye.GetEyeProjectionMatrix(nearZ,farZ));
 	}));
-	classDefEye.def("GetViewMatrix",static_cast<void(*)(lua_State*,::openvr::Eye&,CCameraHandle&)>([](lua_State *l,::openvr::Eye &eye,CCameraHandle &cam) {
-		pragma::Lua::check_component(l,cam);
-		Lua::Push<Mat4>(l,eye.GetEyeViewMatrix(*cam));
+	classDefEye.def("GetViewMatrix",static_cast<void(*)(lua_State*,::openvr::Eye&,pragma::CCameraComponent&)>([](lua_State *l,::openvr::Eye &eye,pragma::CCameraComponent &cam) {
+		Lua::Push<Mat4>(l,eye.GetEyeViewMatrix(cam));
 	}));
 	modVr[classDefEye];
 
