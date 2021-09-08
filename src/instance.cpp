@@ -611,9 +611,9 @@ std::unique_ptr<Instance> Instance::Create(vr::EVRInitError *err,std::vector<std
 
 	auto renderAPI = c_engine->GetRenderContext().GetAPIIdentifier();
 	RenderAPI eRenderAPI;
-	if(ustring::compare(renderAPI,"OpenGL"))
+	if(ustring::compare<std::string>(renderAPI,"OpenGL"))
 		eRenderAPI = RenderAPI::OpenGL;
-	else if(ustring::compare(renderAPI,"Vulkan"))
+	else if(ustring::compare<std::string>(renderAPI,"Vulkan"))
 		eRenderAPI = RenderAPI::Vulkan;
 	else
 		return nullptr;
