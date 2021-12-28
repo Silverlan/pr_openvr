@@ -32,6 +32,8 @@ namespace openvr
 	std::string to_string(vr::ETrackedPropertyError err);
 	std::string to_string(vr::EVRInitError err);
 	Mat4 steam_vr_matrix_to_engine_matrix(const vr::HmdMatrix34_t &matPose);
+	bool is_hmd_present();
+	void preinitialize_openvr();
 
 	class IInstance
 	{
@@ -55,6 +57,7 @@ namespace openvr
 		int32_t GetTrackedDeviceInt32(vr::TrackedDeviceProperty prop,vr::TrackedPropertyError *peError=nullptr) const;
 		uint64_t GetTrackedDeviceUInt64(vr::TrackedDeviceProperty prop,vr::TrackedPropertyError *peError=nullptr) const;
 		Mat3x4 GetTrackedDeviceMatrix34(vr::TrackedDeviceProperty prop,vr::TrackedPropertyError *peError=nullptr) const;
+		vr::ETrackedControllerRole GetTrackedDeviceRole(uint32_t deviceIdx) const;
 
 		bool GetPoseTransform(uint32_t deviceIdx,vr::TrackedDevicePose_t &pose,Mat4 &m) const;
 		std::string GetTrackingSystemName(vr::TrackedPropertyError *peError=nullptr) const;

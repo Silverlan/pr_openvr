@@ -148,6 +148,7 @@ namespace Lua
 			int get_controller_state(lua_State *l);
 			int get_controller_states(lua_State *l);
 			int get_controller_state_with_pose(lua_State *l);
+			int get_controller_role(lua_State *l);
 
 			int get_pose_transform(lua_State *l);
 			int get_pose(lua_State *l);

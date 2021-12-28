@@ -65,6 +65,7 @@ extern "C"
 		else
 			s_vrInstance->HideMirrorWindow();
 	}
+
 	PRAGMA_EXPORT bool openvr_initialize(std::string &strErr,std::vector<std::string> &reqInstanceExtensions,std::vector<std::string> &reqDeviceExtensions)
 	{
 		if(s_vrInstance != nullptr)
@@ -776,6 +777,16 @@ int Lua::openvr::lib::get_controller_state(lua_State *l)
 	return 1;
 }
 
+int Lua::openvr::lib::get_controller_role(lua_State *l)
+{
+	if(s_vrInstance == nullptr)
+		return 0;
+	auto devIndex = Lua::CheckInt(l,1);
+	auto role = s_vrInstance->GetTrackedDeviceRole(devIndex);
+	Lua::PushInt(l,umath::to_integral(role));
+	return 1;
+}
+
 int Lua::openvr::lib::get_controller_state_with_pose(lua_State *l)
 {
 	if(s_vrInstance == nullptr)
@@ -982,6 +993,14 @@ void Lua::openvr::register_lua_library(Lua::Interface &l)
 	auto *lua = l.GetState();
 	Lua::RegisterLibrary(lua,"openvr",{
 		{"initialize",Lua::openvr::lib::initialize},
+		{"preinitialize",+[](lua_State *l) -> int {
+			::openvr::preinitialize_openvr();
+			return 0;
+		}},
+		{"is_hmd_present",+[](lua_State *l) -> int {
+			Lua::PushBool(l,::openvr::is_hmd_present());
+			return 1;
+		}},
 		{"close",Lua::openvr::lib::close},
 
 		{"property_error_to_string",Lua::openvr::lib::property_error_to_string},
@@ -1118,6 +1137,7 @@ void Lua::openvr::register_lua_library(Lua::Interface &l)
 		{"get_controller_state",Lua::openvr::lib::get_controller_state},
 		{"get_controller_states",Lua::openvr::lib::get_controller_states},
 		{"get_controller_state_with_pose",Lua::openvr::lib::get_controller_state_with_pose},
+		{"get_controller_role",Lua::openvr::lib::get_controller_role},
 
 		{"get_pose_transform",Lua::openvr::lib::get_pose_transform},
 		{"get_pose",Lua::openvr::lib::get_pose},
@@ -1234,6 +1254,17 @@ void Lua::openvr::register_lua_library(Lua::Interface &l)
 		{"TRACKING_RESULT_RUNNING_OUT_OF_RANGE",umath::to_integral(vr::ETrackingResult::TrackingResult_Running_OutOfRange)}
 	};
 	Lua::RegisterLibraryEnums(lua,"openvr",propTrackingResults);
+
+	std::unordered_map<std::string,lua_Integer> trackedControllerRoles {
+		{"TRACKED_CONTROLLER_ROLE_INVALID",umath::to_integral(vr::ETrackedControllerRole::TrackedControllerRole_Invalid)},
+		{"TRACKED_CONTROLLER_ROLE_LEFT_HAND",umath::to_integral(vr::ETrackedControllerRole::TrackedControllerRole_LeftHand)},
+		{"TRACKED_CONTROLLER_ROLE_RIGHT_HAND",umath::to_integral(vr::ETrackedControllerRole::TrackedControllerRole_RightHand)},
+		{"TRACKED_CONTROLLER_ROLE_OPT_OUT",umath::to_integral(vr::ETrackedControllerRole::TrackedControllerRole_OptOut)},
+		{"TRACKED_CONTROLLER_ROLE_TREADMILL",umath::to_integral(vr::ETrackedControllerRole::TrackedControllerRole_Treadmill)},
+		{"TRACKED_CONTROLLER_ROLE_STYLUS",umath::to_integral(vr::ETrackedControllerRole::TrackedControllerRole_Stylus)},
+		{"TRACKED_CONTROLLER_ROLE_MAX",umath::to_integral(vr::ETrackedControllerRole::TrackedControllerRole_Max)}
+	};
+	Lua::RegisterLibraryEnums(lua,"openvr",trackedControllerRoles);
 
 	std::unordered_map<std::string,lua_Integer> initErrorEnums {
 		{"INIT_ERROR_NONE",static_cast<int32_t>(vr::EVRInitError::VRInitError_None)},

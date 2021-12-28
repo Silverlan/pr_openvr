@@ -29,6 +29,14 @@ extern "C"
 		s_vrInstance = nullptr;
 		Lua::openvr::lib::close(nullptr);
 	}
+	void PRAGMA_EXPORT preinitialize_openvr()
+	{
+		::openvr::preinitialize_openvr();
+	}
+	bool PRAGMA_EXPORT is_hmd_present()
+	{
+		return ::openvr::is_hmd_present();
+	}
 	/*
 	void PRAGMA_EXPORT InitializeLua(Lua::Interface &l)
 	{

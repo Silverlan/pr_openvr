@@ -422,6 +422,79 @@ std::string openvr::to_string(vr::EVRInitError err)
 
 //////////////////////////////////
 
+struct OpenVrInitializer
+{
+	OpenVrInitializer();
+	~OpenVrInitializer();
+	void Initialize(bool wait=false);
+
+	vr::IVRSystem *GetSystem()
+	{
+		Initialize(true);
+		return m_ivrSystem;
+	}
+	vr::EVRInitError &GetError()
+	{
+		Initialize(true);
+		return m_error;
+	}
+private:
+	enum class State : uint8_t
+	{
+		Initial = 0,
+		Initializing,
+		InitializationComplete
+	};
+	std::thread m_thread;
+	std::atomic<State> m_state = State::Initial;
+	vr::IVRSystem *m_ivrSystem = nullptr;
+	vr::EVRInitError m_error = {};
+};
+
+OpenVrInitializer::OpenVrInitializer()
+{}
+void OpenVrInitializer::Initialize(bool wait)
+{
+	if(m_state == State::Initial)
+	{
+		m_state = State::Initializing;
+		m_thread = std::thread{[this]() {
+			m_ivrSystem = vr::VR_Init(&m_error,vr::EVRApplicationType::VRApplication_Scene);
+			m_state = State::InitializationComplete;
+		}};
+	}
+	if(wait && m_thread.joinable())
+		m_thread.join();
+}
+OpenVrInitializer::~OpenVrInitializer()
+{
+	if(m_state != State::Initial && m_thread.joinable())
+		m_thread.join();
+	if(m_ivrSystem)
+		vr::VR_Shutdown();
+}
+static std::unique_ptr<OpenVrInitializer> g_openVrInitializer = nullptr;
+
+void openvr::preinitialize_openvr()
+{
+	if(g_openVrInitializer)
+		return;
+	g_openVrInitializer = std::make_unique<OpenVrInitializer>();
+	g_openVrInitializer->Initialize();
+}
+
+static vr::IVRSystem *initialize_openvr(vr::EVRInitError *err)
+{
+	openvr::preinitialize_openvr();
+	if(err)
+		*err = g_openVrInitializer->GetError();
+	return g_openVrInitializer->GetSystem();
+}
+
+bool openvr::is_hmd_present() {return vr::VR_IsHmdPresent();}
+
+/////////////
+
 Instance::Instance(vr::IVRSystem *system,RenderAPI renderAPI,vr::IVRRenderModels *i,vr::IVRCompositor *compositor)
 	: m_system{system},m_renderInterface{i},m_compositor{compositor},m_renderAPI{renderAPI}
 {
@@ -592,7 +665,7 @@ std::unique_ptr<Instance> Instance::Create(vr::EVRInitError *err,std::vector<std
 			*err = vr::EVRInitError::VRInitError_Init_HmdNotFound;
 		return nullptr;
 	}
-	auto *ivr = vr::VR_Init(err,vr::EVRApplicationType::VRApplication_Scene);
+	auto *ivr = initialize_openvr(err);
 	if(ivr == nullptr)
 		return nullptr;
 	util::ScopeGuard guard{[]() {
@@ -821,6 +894,14 @@ bool Instance::IsFullscreen() const {return m_compositor->IsFullscreen();}
 bool Instance::ShouldAppRenderWithLowResources() const {return m_compositor->ShouldAppRenderWithLowResources();}
 void Instance::SuspendRendering(bool b) const {m_compositor->SuspendRendering(b);}
 //#include <chrono>
+vr::ETrackedControllerRole Instance::GetTrackedDeviceRole(uint32_t deviceIdx) const
+{
+	vr::ETrackedPropertyError err;
+	auto controllerRole = m_system->GetInt32TrackedDeviceProperty(deviceIdx,vr::ETrackedDeviceProperty::Prop_ControllerRoleHint_Int32,&err);
+	if(err != vr::TrackedProp_Success)
+		return vr::ETrackedControllerRole::TrackedControllerRole_Invalid;
+	return static_cast<vr::ETrackedControllerRole>(controllerRole);
+}
 bool Instance::GetPoseTransform(uint32_t deviceIdx,vr::TrackedDevicePose_t &pose,Mat4 &m) const
 {
 	float fSecondsSinceLastVsync;
