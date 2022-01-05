@@ -462,6 +462,7 @@ void OpenVrInitializer::Initialize(bool wait)
 			m_ivrSystem = vr::VR_Init(&m_error,vr::EVRApplicationType::VRApplication_Scene);
 			m_state = State::InitializationComplete;
 		}};
+		util::set_thread_name(m_thread,"openvr_init");
 	}
 	if(wait && m_thread.joinable())
 		m_thread.join();
