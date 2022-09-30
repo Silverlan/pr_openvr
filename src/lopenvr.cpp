@@ -1,8 +1,6 @@
 #include <prosper_command_buffer.hpp>
 #include <prosper_fence.hpp>
 #include "stdafx_openvr.h"
-#include <config.h>
-#include <wrappers/image.h>
 #include <optional>
 #include <unordered_map>
 #include <pragma/lua/classes/ldef_color.h>
