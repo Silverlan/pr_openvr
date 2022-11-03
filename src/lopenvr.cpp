@@ -609,8 +609,8 @@ int Lua::openvr::lib::get_time_since_last_vsync(lua_State *l)
 	if(s_vrInstance == nullptr)
 		return 0;
 	auto *sys = s_vrInstance->GetSystemInterface();
-	auto secondsSinceLasyVsync = 0.f;
-	auto pullFrameCounter = 0ull;
+	float secondsSinceLasyVsync = 0.f;
+	uint64_t pullFrameCounter = 0ull;
 	auto r = sys->GetTimeSinceLastVsync(&secondsSinceLasyVsync,&pullFrameCounter);
 	Lua::PushBool(l,r);
 	Lua::PushNumber(l,secondsSinceLasyVsync);

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.12)
 
-include("../CMakeShared.txt")
+include("./CMakeShared.txt")
 
 set(PROJ_NAME pr_openvr)
 
@@ -34,7 +34,7 @@ add_def(ANVIL_VULKAN_CPP)
 add_def(USE_VULKAN)
 add_def(ALSYS_LIBRARY_TYPE)
 
-link_generic_module_libraries()
+# link_generic_module_libraries()
 
 add_subdirectory(third_party/openvr)
 set_target_properties(openvr_api64 PROPERTIES FOLDER third_party)

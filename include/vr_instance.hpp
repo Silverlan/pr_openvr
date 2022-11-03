@@ -13,6 +13,7 @@
 #include <mathutil/color.h>
 #include <mathutil/umat.h>
 #include <mathutil/uvec.h>
+#include "vr_eye.hpp"
 
 struct lua_State;
 namespace Lua {class Interface;};
@@ -205,8 +206,8 @@ namespace openvr
 		std::array<vr::TrackedDevicePose_t,vr::k_unMaxTrackedDeviceCount> m_trackedPoses {};
 		std::array<vr::TrackedDeviceClass,vr::k_unMaxTrackedDeviceCount> m_trackedDeviceClasses {};
 		Mat4 m_hmdPoseMatrix = umat::identity();
-		std::unique_ptr<Eye> m_leftEye = nullptr;
-		std::unique_ptr<Eye> m_rightEye = nullptr;
+		std::unique_ptr<Eye> m_leftEye;
+		std::unique_ptr<Eye> m_rightEye;
 		std::function<void(uint32_t,uint32_t,GLFW::KeyState)> m_controllerStateCallback = nullptr;
 		bool m_bHmdViewEnabled = false;
 		RenderAPI m_renderAPI = RenderAPI::OpenGL;

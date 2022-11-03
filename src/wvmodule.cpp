@@ -1,6 +1,5 @@
 #include "stdafx_openvr.h"
 #include "wvmodule.h"
-#include <Windows.h>
 #include "lopenvr.h"
 #include "vr_instance.hpp"
 #include <sharedutils/functioncallback.h>
