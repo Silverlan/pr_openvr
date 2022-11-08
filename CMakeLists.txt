@@ -6,6 +6,55 @@ set(PROJ_NAME pr_openvr)
 
 project(${PROJ_NAME} CXX)
 
+
+#TODO: Point this to proper arch lib
+
+if(WIN32)
+
+    if("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "X86")
+        set(OPENVR_ARCH "win32")
+    elseif("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "AMD64")
+
+        set(OPENVR_ARCH "win64")
+    endif()
+elseif(UNIX AND NOT APPLE)
+
+    if("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "i386")
+        set(OPENVR_ARCH "linux32")
+    elseif("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64")
+
+        set(OPENVR_ARCH "linux64")
+    elseif("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "aarch64")
+
+        set(OPENVR_ARCH "linuxarm64")
+    endif()
+
+#elseif(APPLE)
+
+#    if("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "i386" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
+#        set(OPENVR_ARCH "osx32") #fat/universal bin
+#    endif()
+
+#elseif(ANDROID)
+
+#    if("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "aarch64")
+#        set(OPENVR_ARCH "androidarm64" )
+#    endif()
+
+
+endif()
+
+if("${OPENVR_ARCH}" STREQUAL "")
+    MESSAGE("Invalid architecture! Got: System: ${CMAKE_SYSTEM_NAME} Arch: ${CMAKE_SYSTEM_PROCESSOR}")
+    return()
+endif()
+
+
+
+
+set(DEPENDENCY_OPENVR_INCLUDE ${CMAKE_CURRENT_LIST_DIR}/third_party/openvr/headers CACHE PATH "Path to include directory.")
+search_lib_recursive(DEPENDENCY_OPENVR_LIBRARY third_party/openvr/lib/${OPENVR_ARCH}/ openvr_api DYNAMIC ${CMAKE_CURRENT_LIST_DIR})
+
 # set(PRECOMPILED_HEADER "stdafx")
 
 link_external_library(iclient)
@@ -14,21 +63,33 @@ link_external_library(glfw)
 link_external_library(iglfw)
 link_external_library(prosper)
 link_external_library(anvil)
-link_external_library(client)
-link_external_library(cengine)
 link_external_library(vulkan)
 link_external_library(glslang)
 link_external_library(wgui)
 add_external_library(luajit)
+add_external_library(luasystem)
+
+add_include_dir(luabind)
 if(WIN32)
 	add_external_library(lua)
 endif()
 
 add_include_dir(glm)
 add_include_dir(anvil_build)
+add_include_dir(iglfw)
+add_include_dir(ishared)
+add_include_dir(mathutil)
+add_include_dir(shared)
+add_include_dir(client)
+add_include_dir(vfilesystem)
+add_include_dir(datasystem)
+add_include_dir(sharedutils)
 add_include_dir(alsoundsystem)
 add_include_dir(materialsystem)
 add_include_dir(cmaterialsystem)
+add_include_dir(luasystem)
+add_include_dir(luabind)
+add_include_dir(util_udm)
 
 add_def(ANVIL_VULKAN_CPP)
 add_def(USE_VULKAN)
