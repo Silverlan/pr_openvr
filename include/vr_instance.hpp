@@ -52,6 +52,7 @@ namespace openvr
 		const Eye &GetRightEye() const;
 
 		void SetControllerStateCallback(const std::function<void(uint32_t,uint32_t,GLFW::KeyState)> &callback);
+		std::string GetTrackedDeviceString(vr::TrackedDeviceIndex_t idx,vr::TrackedDeviceProperty prop,vr::TrackedPropertyError *peError=nullptr) const;
 		std::string GetTrackedDeviceString(vr::TrackedDeviceProperty prop,vr::TrackedPropertyError *peError=nullptr) const;
 		bool GetTrackedDeviceBool(vr::TrackedDeviceProperty prop,vr::TrackedPropertyError *peError=nullptr) const;
 		float GetTrackedDeviceFloat(vr::TrackedDeviceProperty prop,vr::TrackedPropertyError *peError=nullptr) const;
@@ -59,6 +60,7 @@ namespace openvr
 		uint64_t GetTrackedDeviceUInt64(vr::TrackedDeviceProperty prop,vr::TrackedPropertyError *peError=nullptr) const;
 		Mat3x4 GetTrackedDeviceMatrix34(vr::TrackedDeviceProperty prop,vr::TrackedPropertyError *peError=nullptr) const;
 		vr::ETrackedControllerRole GetTrackedDeviceRole(uint32_t deviceIdx) const;
+		std::optional<std::string> GetTrackedDeviceSerialNumber(uint32_t deviceIdx) const;
 
 		bool GetPoseTransform(uint32_t deviceIdx,vr::TrackedDevicePose_t &pose,Mat4 &m) const;
 		std::string GetTrackingSystemName(vr::TrackedPropertyError *peError=nullptr) const;

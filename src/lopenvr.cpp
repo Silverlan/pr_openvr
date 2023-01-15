@@ -1136,7 +1136,16 @@ void Lua::openvr::register_lua_library(Lua::Interface &l)
 		{"get_controller_states",Lua::openvr::lib::get_controller_states},
 		{"get_controller_state_with_pose",Lua::openvr::lib::get_controller_state_with_pose},
 		{"get_controller_role",Lua::openvr::lib::get_controller_role},
-
+		{"get_tracked_device_serial_number",+[](lua_State *l) {
+			if(s_vrInstance == nullptr)
+				return 0;
+			auto devIndex = Lua::CheckInt(l,1);
+			auto serialNumber = s_vrInstance->GetTrackedDeviceSerialNumber(devIndex);
+			if(!serialNumber.has_value())
+				return 0;
+			Lua::PushString(l,*serialNumber);
+			return 1;
+		}},
 		{"get_pose_transform",Lua::openvr::lib::get_pose_transform},
 		{"get_pose",Lua::openvr::lib::get_pose},
 		{"update_poses",static_cast<int32_t(*)(lua_State*)>([](lua_State *l) -> int32_t {

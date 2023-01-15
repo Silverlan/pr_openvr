@@ -622,14 +622,18 @@ bool Instance::IsMirrorWindowVisible() const {return m_compositor->IsMirrorWindo
 void Instance::SetHmdViewEnabled(bool b) {m_bHmdViewEnabled = b;}
 bool Instance::IsHmdViewEnabled() const {return m_bHmdViewEnabled;}
 
-std::string Instance::GetTrackedDeviceString(vr::TrackedDeviceProperty prop,vr::TrackedPropertyError *peError) const
+std::string Instance::GetTrackedDeviceString(vr::TrackedDeviceIndex_t idx,vr::TrackedDeviceProperty prop,vr::TrackedPropertyError *peError) const
 {
-	auto unRequiredBufferLen = m_system->GetStringTrackedDeviceProperty(vr::k_unTrackedDeviceIndex_Hmd,prop,nullptr,0,peError);
+	auto unRequiredBufferLen = m_system->GetStringTrackedDeviceProperty(idx,prop,nullptr,0,peError);
 	if(unRequiredBufferLen == 0)
 		return "";
 	std::vector<char> r(unRequiredBufferLen);
-	unRequiredBufferLen = m_system->GetStringTrackedDeviceProperty(vr::k_unTrackedDeviceIndex_Hmd,prop,r.data(),unRequiredBufferLen,peError);
+	unRequiredBufferLen = m_system->GetStringTrackedDeviceProperty(idx,prop,r.data(),unRequiredBufferLen,peError);
 	return std::string{r.data(),r.size()};
+}
+std::string Instance::GetTrackedDeviceString(vr::TrackedDeviceProperty prop,vr::TrackedPropertyError *peError) const
+{
+	return GetTrackedDeviceString(vr::k_unTrackedDeviceIndex_Hmd,prop,peError);
 }
 bool Instance::GetTrackedDeviceBool(vr::TrackedDeviceProperty prop,vr::TrackedPropertyError *peError) const
 {
@@ -902,6 +906,14 @@ vr::ETrackedControllerRole Instance::GetTrackedDeviceRole(uint32_t deviceIdx) co
 	if(err != vr::TrackedProp_Success)
 		return vr::ETrackedControllerRole::TrackedControllerRole_Invalid;
 	return static_cast<vr::ETrackedControllerRole>(controllerRole);
+}
+std::optional<std::string> Instance::GetTrackedDeviceSerialNumber(uint32_t deviceIdx) const
+{
+	vr::TrackedPropertyError err;
+	auto serialNumber = GetTrackedDeviceString(deviceIdx,vr::ETrackedDeviceProperty::Prop_SerialNumber_String,&err);
+	if(err != vr::TrackedProp_Success)
+		return {};
+	return serialNumber;
 }
 bool Instance::GetPoseTransform(uint32_t deviceIdx,vr::TrackedDevicePose_t &pose,Mat4 &m) const
 {
