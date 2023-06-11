@@ -2,14 +2,11 @@
 #define __LOPENVR_H__
 
 struct lua_State;
-namespace Lua
-{
+namespace Lua {
 	class Interface;
-	namespace openvr
-	{
+	namespace openvr {
 		void register_lua_library(Lua::Interface &l);
-		namespace lib
-		{
+		namespace lib {
 			int initialize(lua_State *l);
 			int close(lua_State *l);
 			//int get_tracked_device_property(lua_State *l);

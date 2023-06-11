@@ -21,37 +21,34 @@
 extern DLLCLIENT CEngine *c_engine;
 extern DLLCLIENT CGame *c_game;
 
-openvr::Eye::Eye(Instance &instance,vr::EVREye eye)
-	: m_eye{eye},m_instance{instance}
-{}
+openvr::Eye::Eye(Instance &instance, vr::EVREye eye) : m_eye {eye}, m_instance {instance} {}
 
 openvr::Eye::~Eye() {}
 
-void openvr::Eye::ClearImage() {m_image = nullptr;}
+void openvr::Eye::ClearImage() { m_image = nullptr; }
 void openvr::Eye::SetImage(prosper::IImage &img)
 {
 	m_image = img.shared_from_this();
-	switch(m_instance.GetRenderAPI())
-	{
+	switch(m_instance.GetRenderAPI()) {
 	case RenderAPI::Vulkan:
-	{
-		auto &renderContext = c_engine->GetRenderContext();
-		auto &vrTextureData = (m_vrVkTextureData = vr::VRVulkanTextureData_t{});
-		vrTextureData->m_nImage = reinterpret_cast<uint64_t>(img.GetInternalHandle());
-		vrTextureData->m_pDevice = static_cast<VkDevice_T*>(renderContext.GetInternalDevice());
-		vrTextureData->m_pPhysicalDevice = static_cast<VkPhysicalDevice_T*>(renderContext.GetInternalPhysicalDevice());
-		vrTextureData->m_pInstance = static_cast<VkInstance_T*>(renderContext.GetInternalInstance());
-		vrTextureData->m_pQueue = static_cast<VkQueue_T*>(renderContext.GetInternalUniversalQueue());
-		vrTextureData->m_nQueueFamilyIndex = renderContext.GetUniversalQueueFamilyIndex();
-		vrTextureData->m_nWidth = img.GetWidth();
-		vrTextureData->m_nHeight = img.GetHeight();
-		vrTextureData->m_nFormat = umath::to_integral(img.GetFormat());
-		vrTextureData->m_nSampleCount = umath::to_integral(img.GetSampleCount());
-		m_vrTexture = {&vrTextureData /* handle */,vr::TextureType_Vulkan,vr::EColorSpace::ColorSpace_Auto};
-		break;
-	}
+		{
+			auto &renderContext = c_engine->GetRenderContext();
+			auto &vrTextureData = (m_vrVkTextureData = vr::VRVulkanTextureData_t {});
+			vrTextureData->m_nImage = reinterpret_cast<uint64_t>(img.GetInternalHandle());
+			vrTextureData->m_pDevice = static_cast<VkDevice_T *>(renderContext.GetInternalDevice());
+			vrTextureData->m_pPhysicalDevice = static_cast<VkPhysicalDevice_T *>(renderContext.GetInternalPhysicalDevice());
+			vrTextureData->m_pInstance = static_cast<VkInstance_T *>(renderContext.GetInternalInstance());
+			vrTextureData->m_pQueue = static_cast<VkQueue_T *>(renderContext.GetInternalUniversalQueue());
+			vrTextureData->m_nQueueFamilyIndex = renderContext.GetUniversalQueueFamilyIndex();
+			vrTextureData->m_nWidth = img.GetWidth();
+			vrTextureData->m_nHeight = img.GetHeight();
+			vrTextureData->m_nFormat = umath::to_integral(img.GetFormat());
+			vrTextureData->m_nSampleCount = umath::to_integral(img.GetSampleCount());
+			m_vrTexture = {&vrTextureData /* handle */, vr::TextureType_Vulkan, vr::EColorSpace::ColorSpace_Auto};
+			break;
+		}
 	case RenderAPI::OpenGL:
-		m_vrTexture = {const_cast<void*>(img.GetInternalHandle()),vr::TextureType_OpenGL,vr::EColorSpace::ColorSpace_Auto}; // ColorSpace_Gamma ?
+		m_vrTexture = {const_cast<void *>(img.GetInternalHandle()), vr::TextureType_OpenGL, vr::EColorSpace::ColorSpace_Auto}; // ColorSpace_Gamma ?
 		break;
 	}
 }
@@ -62,17 +59,13 @@ Mat4 openvr::Eye::GetEyeViewMatrix(pragma::CCameraComponent &cam) const
 	auto &matView = cam.GetViewMatrix();
 
 	auto eyeTransform = vrInterface->GetEyeToHeadTransform(m_eye);
-	Mat4 m(
-		eyeTransform.m[0][0],eyeTransform.m[1][0],eyeTransform.m[2][0],0.f,
-		eyeTransform.m[0][1],eyeTransform.m[1][1],eyeTransform.m[2][1],0.f,
-		eyeTransform.m[0][2],eyeTransform.m[1][2],eyeTransform.m[2][2],0.f,
-		eyeTransform.m[0][3],eyeTransform.m[1][3],eyeTransform.m[2][3],1.f
-	);
-	return matView *glm::inverse(m);
+	Mat4 m(eyeTransform.m[0][0], eyeTransform.m[1][0], eyeTransform.m[2][0], 0.f, eyeTransform.m[0][1], eyeTransform.m[1][1], eyeTransform.m[2][1], 0.f, eyeTransform.m[0][2], eyeTransform.m[1][2], eyeTransform.m[2][2], 0.f, eyeTransform.m[0][3], eyeTransform.m[1][3], eyeTransform.m[2][3],
+	  1.f);
+	return matView * glm::inverse(m);
 }
-vr::EVREye &openvr::Eye::GetVREye() {return m_eye;}
-vr::Texture_t &openvr::Eye::GetVRTexture() {return m_vrTexture;}
-Mat4 openvr::Eye::GetEyeProjectionMatrix(float nearZ,float farZ) const
+vr::EVREye &openvr::Eye::GetVREye() { return m_eye; }
+vr::Texture_t &openvr::Eye::GetVRTexture() { return m_vrTexture; }
+Mat4 openvr::Eye::GetEyeProjectionMatrix(float nearZ, float farZ) const
 {
 	auto *vrInterface = m_instance.GetSystemInterface();
 
@@ -87,8 +80,8 @@ Mat4 openvr::Eye::GetEyeProjectionMatrix(float nearZ,float farZ) const
 	//	eyeProj.m[0][3],eyeProj.m[1][3],eyeProj.m[2][3],eyeProj.m[3][3]
 	// };
 
-	float left,right,top,bottom;
-	vrInterface->GetProjectionRaw(m_eye,&left,&right,&top,&bottom);
+	float left, right, top, bottom;
+	vrInterface->GetProjectionRaw(m_eye, &left, &right, &top, &bottom);
 
-	return glm::frustumRH(left,right,bottom,top,nearZ,farZ);
+	return glm::frustumRH(left, right, bottom, top, nearZ, farZ);
 }

@@ -7,27 +7,32 @@
 #include <sharedutils/util_weak_handle.hpp>
 #include <optional>
 
-namespace prosper {class RenderTarget; class IImage; class IPrimaryCommandBuffer; class IFence;};
+namespace prosper {
+	class RenderTarget;
+	class IImage;
+	class IPrimaryCommandBuffer;
+	class IFence;
+};
 namespace pragma {
 	class CCameraComponent;
-	namespace rendering {class BaseRenderer;};
+	namespace rendering {
+		class BaseRenderer;
+	};
 };
-namespace openvr
-{
+namespace openvr {
 	class Instance;
-	struct Eye
-	{
-	public:
-		Eye(Instance &instance,vr::EVREye eye);
+	struct Eye {
+	  public:
+		Eye(Instance &instance, vr::EVREye eye);
 		~Eye();
 
 		void SetImage(prosper::IImage &src);
 		void ClearImage();
 		Mat4 GetEyeViewMatrix(pragma::CCameraComponent &cam) const;
-		Mat4 GetEyeProjectionMatrix(float nearZ,float farZ) const;
+		Mat4 GetEyeProjectionMatrix(float nearZ, float farZ) const;
 		vr::EVREye &GetVREye();
 		vr::Texture_t &GetVRTexture();
-	private:
+	  private:
 		Instance &m_instance;
 		std::shared_ptr<prosper::IImage> m_image = nullptr;
 		std::optional<vr::VRVulkanTextureData_t> m_vrVkTextureData {};
