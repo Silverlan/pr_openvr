@@ -59,6 +59,7 @@ namespace openvr {
 		Mat3x4 GetTrackedDeviceMatrix34(vr::TrackedDeviceProperty prop, vr::TrackedPropertyError *peError = nullptr) const;
 		vr::ETrackedControllerRole GetTrackedDeviceRole(uint32_t deviceIdx) const;
 		std::optional<std::string> GetTrackedDeviceSerialNumber(uint32_t deviceIdx) const;
+		std::optional<std::string> GetTrackedDeviceType(uint32_t deviceIdx) const;
 
 		bool GetPoseTransform(uint32_t deviceIdx, vr::TrackedDevicePose_t &pose, Mat4 &m) const;
 		std::string GetTrackingSystemName(vr::TrackedPropertyError *peError = nullptr) const;

@@ -849,6 +849,14 @@ std::optional<std::string> Instance::GetTrackedDeviceSerialNumber(uint32_t devic
 		return {};
 	return serialNumber;
 }
+std::optional<std::string> Instance::GetTrackedDeviceType(uint32_t deviceIdx) const
+{
+	vr::TrackedPropertyError err;
+	auto serialNumber = GetTrackedDeviceString(deviceIdx, vr::ETrackedDeviceProperty::Prop_ControllerType_String, &err);
+	if(err != vr::TrackedProp_Success)
+		return {};
+	return serialNumber;
+}
 bool Instance::GetPoseTransform(uint32_t deviceIdx, vr::TrackedDevicePose_t &pose, Mat4 &m) const
 {
 	float fSecondsSinceLastVsync;
