@@ -152,6 +152,7 @@ namespace openvr {
 		vr::IVRSystem *GetSystemInterface();
 		vr::IVRRenderModels *GetRenderInterface();
 		vr::IVRCompositor *GetCompositorInterface();
+		vr::IVRChaperone *GetChaperone();
 
 		RenderAPI GetRenderAPI() const;
 		void FadeToColor(Color col, float tFade, bool bBackground = false);
@@ -196,6 +197,7 @@ namespace openvr {
 		vr::IVRSystem *m_system;
 		vr::IVRRenderModels *m_renderInterface;
 		vr::IVRCompositor *m_compositor;
+		vr::IVRChaperone *m_chaperone;
 		util::WeakHandle<prosper::Shader> m_hShaderFlip;
 		std::unordered_map<uint32_t, ControllerState> m_controllerStates;
 		std::array<Mat4, vr::k_unMaxTrackedDeviceCount> m_poseTransforms;

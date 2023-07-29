@@ -482,7 +482,7 @@ bool openvr::is_hmd_present() { return vr::VR_IsHmdPresent(); }
 
 /////////////
 
-Instance::Instance(vr::IVRSystem *system, RenderAPI renderAPI, vr::IVRRenderModels *i, vr::IVRCompositor *compositor) : m_system {system}, m_renderInterface {i}, m_compositor {compositor}, m_renderAPI {renderAPI}
+Instance::Instance(vr::IVRSystem *system, RenderAPI renderAPI, vr::IVRRenderModels *i, vr::IVRCompositor *compositor) : m_system {system}, m_renderInterface {i}, m_compositor {compositor}, m_renderAPI {renderAPI}, m_chaperone {vr::VRChaperone()}
 {
 	m_leftEye = std::make_unique<Eye>(*this, vr::EVREye::Eye_Left);
 	m_rightEye = std::make_unique<Eye>(*this, vr::EVREye::Eye_Right);
@@ -581,6 +581,7 @@ static bool check_error(vr::EVRCompositorError err)
 vr::IVRSystem *Instance::GetSystemInterface() { return m_system; }
 vr::IVRRenderModels *Instance::GetRenderInterface() { return m_renderInterface; }
 vr::IVRCompositor *Instance::GetCompositorInterface() { return m_compositor; }
+vr::IVRChaperone *Instance::GetChaperone() { return m_chaperone; }
 
 RenderAPI Instance::GetRenderAPI() const { return m_renderAPI; }
 void Instance::FadeToColor(Color col, float tFade, bool bBackground) { m_compositor->FadeToColor(tFade, static_cast<float>(col.r) / 255.f, static_cast<float>(col.g) / 255.f, static_cast<float>(col.b) / 255.f, static_cast<float>(col.a) / 255.f, bBackground); }
