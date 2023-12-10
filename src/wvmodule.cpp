@@ -9,8 +9,6 @@
 #include <iostream>
 #endif
 
-extern std::unique_ptr<::openvr::Instance> s_vrInstance;
-
 class Game;
 class CGame;
 extern "C" {
@@ -20,11 +18,8 @@ void PRAGMA_EXPORT pragma_initialize_lua(Lua::Interface &l)
 		return;
 	Lua::openvr::register_lua_library(l);
 }
-void PRAGMA_EXPORT pragma_terminate_lua(Lua::Interface &l)
+void PRAGMA_EXPORT pragma_detach()
 {
-	if(l.GetIdentifier() != "cl")
-		return;
-	s_vrInstance = nullptr;
 	Lua::openvr::lib::close(nullptr);
 }
 void PRAGMA_EXPORT preinitialize_openvr() { ::openvr::preinitialize_openvr(); }
