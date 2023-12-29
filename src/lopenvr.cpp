@@ -1146,7 +1146,6 @@ static void add_event_data(const vr::VREvent_t &ev, luabind::object &t)
 	case vr::VREvent_InputFocusCaptured:
 	case vr::VREvent_InputFocusReleased:
 	case vr::VREvent_SceneApplicationChanged:
-	case vr::VREvent_SceneFocusChanged:
 	case vr::VREvent_InputFocusChanged:
 	case vr::VREvent_SceneApplicationUsingWrongGraphicsAdapter:
 	case vr::VREvent_ActionBindingReloaded:
@@ -1587,7 +1586,6 @@ void Lua::openvr::register_lua_library(Lua::Interface &l)
 	  {"EVENT_INPUT_FOCUS_CAPTURED", vr::VREvent_InputFocusCaptured},
 	  {"EVENT_INPUT_FOCUS_RELEASED", vr::VREvent_InputFocusReleased},
 	  {"EVENT_SCENE_APPLICATION_CHANGED", vr::VREvent_SceneApplicationChanged},
-	  {"EVENT_SCENE_FOCUS_CHANGED", vr::VREvent_SceneFocusChanged},
 	  {"EVENT_INPUT_FOCUS_CHANGED", vr::VREvent_InputFocusChanged},
 	  {"EVENT_SCENE_APPLICATION_USING_WRONG_GRAPHICS_ADAPTER", vr::VREvent_SceneApplicationUsingWrongGraphicsAdapter},
 	  {"EVENT_ACTION_BINDING_RELOADED", vr::VREvent_ActionBindingReloaded},

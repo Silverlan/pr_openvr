@@ -79,8 +79,6 @@ std::string openvr::to_string(uint32_t ev)
 	case vr::EVREventType::VREvent_InputFocusReleased:
 		return "Input focus released";
 	case vr::EVREventType::VREvent_SceneApplicationChanged:
-		return "Scene application changed";
-	case vr::EVREventType::VREvent_SceneFocusChanged:
 		return "Scene focus changed";
 	case vr::EVREventType::VREvent_HideRenderModels:
 		return "Hide render models";
