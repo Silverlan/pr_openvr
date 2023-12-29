@@ -13,6 +13,10 @@
 #include <pragma/physics/collision_object.hpp>
 #include <pragma/lua/c_lentity_handles.hpp>
 #include <pragma/lua/converters/game_type_converters_t.hpp>
+#include <pragma/lua/converters/optional_converter_t.hpp>
+#include <pragma/lua/converters/pair_converter_t.hpp>
+#include <pragma/lua/converters/vector_converter_t.hpp>
+#include <pragma/lua/policies/default_parameter_policy.hpp>
 #include <pragma/entities/environment/c_env_camera.h>
 #include <pragma/entities/components/c_scene_component.hpp>
 #include <pragma/c_engine.h>
@@ -25,12 +29,120 @@
 #include "lopenvr.h"
 #include "wvmodule.h"
 #include <glm/gtx/matrix_decompose.hpp>
+#include <luabind/copy_policy.hpp>
 
 std::unique_ptr<openvr::Instance> s_vrInstance = nullptr;
 
-static openvr::Eye &get_eye(lua_State *l, int32_t eyeIdIndex)
+namespace luabind {
+	// Instance
+	namespace detail {
+		PRAGMA_EXPORT openvr::Instance *get_openvr_instance(lua_State *l);
+		template<typename T>
+		T get_openvr_instance(lua_State *l)
+		{
+			if constexpr(std::is_pointer_v<T>)
+				return static_cast<T>(get_openvr_instance(l));
+			else {
+				auto *instance = get_openvr_instance(l);
+				if(!instance)
+					Lua::Error(l, "openvr has not been initialized!");
+				return *instance;
+			}
+		}
+	};
+	template<typename T>
+	    requires(is_type_or_derived<T, openvr::Instance>)
+	struct default_converter<T> : parameter_emplacement_converter<T, detail::get_openvr_instance<T>> {};
+
+	// System
+	namespace detail {
+		PRAGMA_EXPORT vr::IVRSystem *get_openvr_system(lua_State *l);
+		template<typename T>
+		T get_openvr_system(lua_State *l)
+		{
+			if constexpr(std::is_pointer_v<T>)
+				return static_cast<T>(get_openvr_system(l));
+			else {
+				auto *instance = get_openvr_system(l);
+				if(!instance)
+					Lua::Error(l, "openvr has not been initialized!");
+				return *instance;
+			}
+		}
+	};
+	template<typename T>
+	    requires(is_type_or_derived<T, vr::IVRSystem>)
+	struct default_converter<T> : parameter_emplacement_converter<T, detail::get_openvr_system<T>> {};
+
+	// RenderModels
+	namespace detail {
+		PRAGMA_EXPORT vr::IVRRenderModels *get_openvr_render_models(lua_State *l);
+		template<typename T>
+		T get_openvr_render_models(lua_State *l)
+		{
+			if constexpr(std::is_pointer_v<T>)
+				return static_cast<T>(get_openvr_render_models(l));
+			else {
+				auto *instance = get_openvr_render_models(l);
+				if(!instance)
+					Lua::Error(l, "openvr has not been initialized!");
+				return *instance;
+			}
+		}
+	};
+	template<typename T>
+	    requires(is_type_or_derived<T, vr::IVRRenderModels>)
+	struct default_converter<T> : parameter_emplacement_converter<T, detail::get_openvr_render_models<T>> {};
+
+	// Compositor
+	namespace detail {
+		PRAGMA_EXPORT vr::IVRCompositor *get_openvr_compositor(lua_State *l);
+		template<typename T>
+		T get_openvr_compositor(lua_State *l)
+		{
+			if constexpr(std::is_pointer_v<T>)
+				return static_cast<T>(get_openvr_compositor(l));
+			else {
+				auto *instance = get_openvr_compositor(l);
+				if(!instance)
+					Lua::Error(l, "openvr has not been initialized!");
+				return *instance;
+			}
+		}
+	};
+	template<typename T>
+	    requires(is_type_or_derived<T, vr::IVRCompositor>)
+	struct default_converter<T> : parameter_emplacement_converter<T, detail::get_openvr_compositor<T>> {};
+
+	// Chaperone
+	namespace detail {
+		PRAGMA_EXPORT vr::IVRChaperone *get_openvr_chaperone(lua_State *l);
+		template<typename T>
+		T get_openvr_chaperone(lua_State *l)
+		{
+			if constexpr(std::is_pointer_v<T>)
+				return static_cast<T>(get_openvr_chaperone(l));
+			else {
+				auto *instance = get_openvr_chaperone(l);
+				if(!instance)
+					Lua::Error(l, "openvr has not been initialized!");
+				return *instance;
+			}
+		}
+	};
+	template<typename T>
+	    requires(is_type_or_derived<T, vr::IVRChaperone>)
+	struct default_converter<T> : parameter_emplacement_converter<T, detail::get_openvr_chaperone<T>> {};
+}
+
+openvr::Instance *luabind::detail::get_openvr_instance(lua_State *l) { return s_vrInstance.get(); }
+vr::IVRSystem *luabind::detail::get_openvr_system(lua_State *l) { return s_vrInstance ? s_vrInstance->GetSystemInterface() : nullptr; }
+vr::IVRRenderModels *luabind::detail::get_openvr_render_models(lua_State *l) { return s_vrInstance ? s_vrInstance->GetRenderInterface() : nullptr; }
+vr::IVRCompositor *luabind::detail::get_openvr_compositor(lua_State *l) { return s_vrInstance ? s_vrInstance->GetCompositorInterface() : nullptr; }
+vr::IVRChaperone *luabind::detail::get_openvr_chaperone(lua_State *l) { return s_vrInstance ? s_vrInstance->GetChaperone() : nullptr; }
+
+static openvr::Eye &get_eye(vr::EVREye eyeId)
 {
-	auto eyeId = static_cast<vr::EVREye>(Lua::CheckInt(l, eyeIdIndex));
 	switch(eyeId) {
 	case vr::EVREye::Eye_Left:
 		return s_vrInstance->GetLeftEye();
@@ -92,1004 +204,260 @@ int run_openxr_demo(int argc, char *argv[]);
 GLFW::Window *get_glfw_window() { return &*pragma::get_cengine()->GetRenderContext().GetWindow(); }
 
 //#include "openxr/pvr_openxr_instance.hpp"
-int Lua::openvr::lib::initialize(lua_State *l)
-{
-	//static auto instance = pvr::XrInstance::Create();
-	//for(;;)
-	//	instance->Render();
-	//return 0;
-	vr::EVRInitError err;
-	if(s_vrInstance != nullptr)
-		err = vr::EVRInitError::VRInitError_None;
-	else {
-		std::vector<std::string> reqInstanceExtensions;
-		std::vector<std::string> reqDeviceExtensions;
-		s_vrInstance = ::openvr::Instance::Create(&err, reqInstanceExtensions, reqDeviceExtensions);
-	}
-	Lua::PushInt(l, static_cast<uint32_t>(err));
-	return 1;
-}
 
-int Lua::openvr::lib::close(lua_State *l)
-{
-	s_vrInstance = nullptr;
-	return 0;
-}
+namespace Lua {
+	namespace openvr {
+		std::string property_error_to_string(vr::ETrackedPropertyError err) { return ::openvr::to_string(err); }
 
-int Lua::openvr::lib::property_error_to_string(lua_State *l)
-{
-	auto err = Lua::CheckInt(l, 1);
-	Lua::PushString(l, ::openvr::to_string(static_cast<vr::ETrackedPropertyError>(err)));
-	return 1;
-}
+		std::string init_error_to_string(vr::EVRInitError err) { return ::openvr::to_string(err); }
 
-int Lua::openvr::lib::init_error_to_string(lua_State *l)
-{
-	auto err = Lua::CheckInt(l, 1);
-	Lua::PushString(l, ::openvr::to_string(static_cast<vr::EVRInitError>(err)));
-	return 1;
-}
+		std::string compositor_error_to_string(vr::VRCompositorError err) { return ::openvr::to_string(err); }
 
-int Lua::openvr::lib::compositor_error_to_string(lua_State *l)
-{
-	auto err = Lua::CheckInt(l, 1);
-	Lua::PushString(l, ::openvr::to_string(static_cast<vr::VRCompositorError>(err)));
-	return 1;
-}
-
-int Lua::openvr::lib::button_id_to_string(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		return 0;
-	auto *sys = s_vrInstance->GetSystemInterface();
-	auto buttonId = Lua::CheckInt(l, 1);
-	Lua::PushString(l, sys->GetButtonIdNameFromEnum(static_cast<vr::EVRButtonId>(buttonId)));
-	return 1;
-}
-
-int Lua::openvr::lib::event_type_to_string(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		return 0;
-	auto *sys = s_vrInstance->GetSystemInterface();
-	auto evType = Lua::CheckInt(l, 1);
-	Lua::PushString(l, ::openvr::to_string(static_cast<vr::EVREventType>(evType)));
-	return 1;
-}
-
-int Lua::openvr::lib::controller_axis_type_to_string(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		return 0;
-	auto *sys = s_vrInstance->GetSystemInterface();
-	auto controllerAxisType = Lua::CheckInt(l, 1);
-	Lua::PushString(l, sys->GetControllerAxisTypeNameFromEnum(static_cast<vr::EVRControllerAxisType>(controllerAxisType)));
-	return 1;
-}
-
-template<class T>
-static int get_property(lua_State *l, const std::function<T(vr::TrackedPropertyError *)> &f, const std::function<void(lua_State *, T &)> &push)
-{
-	int32_t numArgs = 1;
-	if(s_vrInstance == nullptr)
-		Lua::PushInt(l, vr::ETrackedPropertyError::TrackedProp_InvalidDevice);
-	else {
-		vr::TrackedPropertyError err;
-		auto r = f(&err);
-		Lua::PushInt(l, static_cast<uint32_t>(err));
-		if(err == vr::ETrackedPropertyError::TrackedProp_Success) {
-			push(l, r);
-			++numArgs;
+		std::optional<std::string> button_id_to_string(vr::EVRButtonId buttonId)
+		{
+			if(s_vrInstance == nullptr)
+				return {};
+			auto *sys = s_vrInstance->GetSystemInterface();
+			return sys->GetButtonIdNameFromEnum(buttonId);
 		}
-	}
-	return numArgs;
-}
 
-static int get_property_string(lua_State *l, const std::function<std::string(vr::TrackedPropertyError *)> &f)
-{
-	return get_property<std::string>(l, f, [](lua_State *l, std::string &str) -> void { Lua::PushString(l, str); });
-}
-static int get_property_bool(lua_State *l, const std::function<bool(vr::TrackedPropertyError *)> &f)
-{
-	return get_property<bool>(l, f, [](lua_State *l, bool &b) -> void { Lua::PushBool(l, b); });
-}
-static int get_property_float(lua_State *l, const std::function<float(vr::TrackedPropertyError *)> &f)
-{
-	return get_property<float>(l, f, [](lua_State *l, float &f) -> void { Lua::PushNumber(l, f); });
-}
-static int get_property_mat3x4(lua_State *l, const std::function<glm::mat3x4(vr::TrackedPropertyError *)> &f)
-{
-	return get_property<glm::mat3x4>(l, f, [](lua_State *l, glm::mat3x4 &m) -> void { Lua::Push<glm::mat3x4>(l, m); });
-}
-static int get_property_int32(lua_State *l, const std::function<int32_t(vr::TrackedPropertyError *)> &f)
-{
-	return get_property<int32_t>(l, f, [](lua_State *l, int32_t &i) -> void { Lua::PushInt(l, i); });
-}
-static int get_property_uint64(lua_State *l, const std::function<uint64_t(vr::TrackedPropertyError *)> &f)
-{
-	return get_property<uint64_t>(l, f, [](lua_State *l, uint64_t &i) -> void { Lua::PushInt(l, i); });
-}
-static int get_property_vec2(lua_State *l, const std::function<glm::vec2(vr::TrackedPropertyError *)> &f)
-{
-	return get_property<glm::vec2>(l, f, [](lua_State *l, glm::vec2 &v) -> void { Lua::Push<glm::vec2>(l, v); });
-}
+		std::optional<std::string> event_type_to_string(vr::EVREventType evType)
+		{
+			if(s_vrInstance == nullptr)
+				return {};
+			auto *sys = s_vrInstance->GetSystemInterface();
+			return ::openvr::to_string(evType);
+		}
 
-int Lua::openvr::lib::get_tracking_system_name(lua_State *l)
-{
-	return get_property_string(l, [](vr::TrackedPropertyError *err) -> std::string { return s_vrInstance->GetTrackingSystemName(err); });
-}
-int Lua::openvr::lib::get_model_number(lua_State *l)
-{
-	return get_property_string(l, [](vr::TrackedPropertyError *err) -> std::string { return s_vrInstance->GetModelNumber(err); });
-}
-int Lua::openvr::lib::get_serial_number(lua_State *l)
-{
-	return get_property_string(l, [](vr::TrackedPropertyError *err) -> std::string { return s_vrInstance->GetSerialNumber(err); });
-}
-
-int Lua::openvr::lib::get_render_model_name(lua_State *l)
-{
-	return get_property_string(l, [](vr::TrackedPropertyError *err) -> std::string { return s_vrInstance->GetRenderModelName(err); });
-}
-int Lua::openvr::lib::get_manufacturer_name(lua_State *l)
-{
-	return get_property_string(l, [](vr::TrackedPropertyError *err) -> std::string { return s_vrInstance->GetManufacturerName(err); });
-}
-int Lua::openvr::lib::get_tracking_firmware_version(lua_State *l)
-{
-	return get_property_string(l, [](vr::TrackedPropertyError *err) -> std::string { return s_vrInstance->GetTrackingFirmwareVersion(err); });
-}
-int Lua::openvr::lib::get_hardware_revision(lua_State *l)
-{
-	return get_property_string(l, [](vr::TrackedPropertyError *err) -> std::string { return s_vrInstance->GetHardwareRevision(err); });
-}
-int Lua::openvr::lib::get_all_wireless_dongle_descriptions(lua_State *l)
-{
-	return get_property_string(l, [](vr::TrackedPropertyError *err) -> std::string { return s_vrInstance->GetAllWirelessDongleDescriptions(err); });
-}
-int Lua::openvr::lib::get_connected_wireless_dongle(lua_State *l)
-{
-	return get_property_string(l, [](vr::TrackedPropertyError *err) -> std::string { return s_vrInstance->GetConnectedWirelessDongle(err); });
-}
-int Lua::openvr::lib::get_firmware_manual_update_url(lua_State *l)
-{
-	return get_property_string(l, [](vr::TrackedPropertyError *err) -> std::string { return s_vrInstance->GetFirmwareManualUpdateURL(err); });
-}
-int Lua::openvr::lib::get_firmware_programming_target(lua_State *l)
-{
-	return get_property_string(l, [](vr::TrackedPropertyError *err) -> std::string { return s_vrInstance->GetFirmwareProgrammingTarget(err); });
-}
-int Lua::openvr::lib::get_display_mc_image_left(lua_State *l)
-{
-	return get_property_string(l, [](vr::TrackedPropertyError *err) -> std::string { return s_vrInstance->GetDisplayMCImageLeft(err); });
-}
-int Lua::openvr::lib::get_display_mc_image_right(lua_State *l)
-{
-	return get_property_string(l, [](vr::TrackedPropertyError *err) -> std::string { return s_vrInstance->GetDisplayMCImageRight(err); });
-}
-int Lua::openvr::lib::get_display_gc_image(lua_State *l)
-{
-	return get_property_string(l, [](vr::TrackedPropertyError *err) -> std::string { return s_vrInstance->GetDisplayGCImage(err); });
-}
-int Lua::openvr::lib::get_camera_firmware_description(lua_State *l)
-{
-	return get_property_string(l, [](vr::TrackedPropertyError *err) -> std::string { return s_vrInstance->GetCameraFirmwareDescription(err); });
-}
-int Lua::openvr::lib::get_attached_device_id(lua_State *l)
-{
-	return get_property_string(l, [](vr::TrackedPropertyError *err) -> std::string { return s_vrInstance->GetAttachedDeviceId(err); });
-}
-int Lua::openvr::lib::get_model_label(lua_State *l)
-{
-	return get_property_string(l, [](vr::TrackedPropertyError *err) -> std::string { return s_vrInstance->GetModelLabel(err); });
-}
-
-int Lua::openvr::lib::will_drift_in_yaw(lua_State *l)
-{
-	return get_property_bool(l, [](vr::TrackedPropertyError *err) -> bool { return s_vrInstance->WillDriftInYaw(err); });
-}
-int Lua::openvr::lib::device_is_wireless(lua_State *l)
-{
-	return get_property_bool(l, [](vr::TrackedPropertyError *err) -> bool { return s_vrInstance->DeviceIsWireless(err); });
-}
-int Lua::openvr::lib::device_is_charging(lua_State *l)
-{
-	return get_property_bool(l, [](vr::TrackedPropertyError *err) -> bool { return s_vrInstance->DeviceIsCharging(err); });
-}
-int Lua::openvr::lib::firmware_update_available(lua_State *l)
-{
-	return get_property_bool(l, [](vr::TrackedPropertyError *err) -> bool { return s_vrInstance->FirmwareUpdateAvailable(err); });
-}
-int Lua::openvr::lib::firmware_manual_update(lua_State *l)
-{
-	return get_property_bool(l, [](vr::TrackedPropertyError *err) -> bool { return s_vrInstance->FirmwareManualUpdate(err); });
-}
-int Lua::openvr::lib::block_server_shutdown(lua_State *l)
-{
-	return get_property_bool(l, [](vr::TrackedPropertyError *err) -> bool { return s_vrInstance->BlockServerShutdown(err); });
-}
-int Lua::openvr::lib::can_unify_coordinate_system_with_hmd(lua_State *l)
-{
-	return get_property_bool(l, [](vr::TrackedPropertyError *err) -> bool { return s_vrInstance->CanUnifyCoordinateSystemWithHmd(err); });
-}
-int Lua::openvr::lib::contains_proximity_sensor(lua_State *l)
-{
-	return get_property_bool(l, [](vr::TrackedPropertyError *err) -> bool { return s_vrInstance->ContainsProximitySensor(err); });
-}
-int Lua::openvr::lib::device_provides_battery_status(lua_State *l)
-{
-	return get_property_bool(l, [](vr::TrackedPropertyError *err) -> bool { return s_vrInstance->DeviceProvidesBatteryStatus(err); });
-}
-int Lua::openvr::lib::device_can_power_off(lua_State *l)
-{
-	return get_property_bool(l, [](vr::TrackedPropertyError *err) -> bool { return s_vrInstance->DeviceCanPowerOff(err); });
-}
-int Lua::openvr::lib::has_camera(lua_State *l)
-{
-	return get_property_bool(l, [](vr::TrackedPropertyError *err) -> bool { return s_vrInstance->HasCamera(err); });
-}
-int Lua::openvr::lib::reports_time_since_vsync(lua_State *l)
-{
-	return get_property_bool(l, [](vr::TrackedPropertyError *err) -> bool { return s_vrInstance->ReportsTimeSinceVSync(err); });
-}
-int Lua::openvr::lib::is_on_desktop(lua_State *l)
-{
-	return get_property_bool(l, [](vr::TrackedPropertyError *err) -> bool { return s_vrInstance->IsOnDesktop(err); });
-}
-
-int Lua::openvr::lib::get_device_battery_percentage(lua_State *l)
-{
-	return get_property_float(l, [](vr::TrackedPropertyError *err) -> float { return s_vrInstance->GetDeviceBatteryPercentage(err); });
-}
-int Lua::openvr::lib::get_seconds_from_vsync_to_photons(lua_State *l)
-{
-	return get_property_float(l, [](vr::TrackedPropertyError *err) -> float { return s_vrInstance->GetSecondsFromVsyncToPhotons(err); });
-}
-int Lua::openvr::lib::get_display_frequency(lua_State *l)
-{
-	return get_property_float(l, [](vr::TrackedPropertyError *err) -> float { return s_vrInstance->GetDisplayFrequency(err); });
-}
-int Lua::openvr::lib::get_user_ipd_meters(lua_State *l)
-{
-	return get_property_float(l, [](vr::TrackedPropertyError *err) -> float { return s_vrInstance->GetUserIpdMeters(err); });
-}
-int Lua::openvr::lib::get_display_mc_offset(lua_State *l)
-{
-	return get_property_float(l, [](vr::TrackedPropertyError *err) -> float { return s_vrInstance->GetDisplayMCOffset(err); });
-}
-int Lua::openvr::lib::get_display_mc_scale(lua_State *l)
-{
-	return get_property_float(l, [](vr::TrackedPropertyError *err) -> float { return s_vrInstance->GetDisplayMCScale(err); });
-}
-int Lua::openvr::lib::get_display_gc_black_clamp(lua_State *l)
-{
-	return get_property_float(l, [](vr::TrackedPropertyError *err) -> float { return s_vrInstance->GetDisplayGCBlackClamp(err); });
-}
-int Lua::openvr::lib::get_display_gc_offset(lua_State *l)
-{
-	return get_property_float(l, [](vr::TrackedPropertyError *err) -> float { return s_vrInstance->GetDisplayGCOffset(err); });
-}
-int Lua::openvr::lib::get_display_gc_scale(lua_State *l)
-{
-	return get_property_float(l, [](vr::TrackedPropertyError *err) -> float { return s_vrInstance->GetDisplayGCScale(err); });
-}
-int Lua::openvr::lib::get_display_gc_prescale(lua_State *l)
-{
-	return get_property_float(l, [](vr::TrackedPropertyError *err) -> float { return s_vrInstance->GetDisplayGCPrescale(err); });
-}
-int Lua::openvr::lib::get_lens_center_left_u(lua_State *l)
-{
-	return get_property_float(l, [](vr::TrackedPropertyError *err) -> float { return s_vrInstance->GetLensCenterLeftU(err); });
-}
-int Lua::openvr::lib::get_lens_center_left_v(lua_State *l)
-{
-	return get_property_float(l, [](vr::TrackedPropertyError *err) -> float { return s_vrInstance->GetLensCenterLeftV(err); });
-}
-int Lua::openvr::lib::get_lens_center_left_uv(lua_State *l)
-{
-	return get_property_vec2(l, [](vr::TrackedPropertyError *err) -> glm::vec2 { return s_vrInstance->GetLensCenterLeftUV(err); });
-}
-int Lua::openvr::lib::get_lens_center_right_u(lua_State *l)
-{
-	return get_property_float(l, [](vr::TrackedPropertyError *err) -> float { return s_vrInstance->GetLensCenterRightU(err); });
-}
-int Lua::openvr::lib::get_lens_center_right_v(lua_State *l)
-{
-	return get_property_float(l, [](vr::TrackedPropertyError *err) -> float { return s_vrInstance->GetLensCenterRightV(err); });
-}
-int Lua::openvr::lib::get_lens_center_right_uv(lua_State *l)
-{
-	return get_property_vec2(l, [](vr::TrackedPropertyError *err) -> glm::vec2 { return s_vrInstance->GetLensCenterRightUV(err); });
-}
-int Lua::openvr::lib::get_user_head_to_eye_depth_meters(lua_State *l)
-{
-	return get_property_float(l, [](vr::TrackedPropertyError *err) -> float { return s_vrInstance->GetUserHeadToEyeDepthMeters(err); });
-}
-int Lua::openvr::lib::get_field_of_view_left_degrees(lua_State *l)
-{
-	return get_property_float(l, [](vr::TrackedPropertyError *err) -> float { return s_vrInstance->GetFieldOfViewLeftDegrees(err); });
-}
-int Lua::openvr::lib::get_field_of_view_right_degrees(lua_State *l)
-{
-	return get_property_float(l, [](vr::TrackedPropertyError *err) -> float { return s_vrInstance->GetFieldOfViewRightDegrees(err); });
-}
-int Lua::openvr::lib::get_field_of_view_top_degrees(lua_State *l)
-{
-	return get_property_float(l, [](vr::TrackedPropertyError *err) -> float { return s_vrInstance->GetFieldOfViewTopDegrees(err); });
-}
-int Lua::openvr::lib::get_field_of_view_bottom_degrees(lua_State *l)
-{
-	return get_property_float(l, [](vr::TrackedPropertyError *err) -> float { return s_vrInstance->GetFieldOfViewBottomDegrees(err); });
-}
-int Lua::openvr::lib::get_tracking_range_minimum_meters(lua_State *l)
-{
-	return get_property_float(l, [](vr::TrackedPropertyError *err) -> float { return s_vrInstance->GetTrackingRangeMinimumMeters(err); });
-}
-int Lua::openvr::lib::get_tracking_range_maximum_meters(lua_State *l)
-{
-	return get_property_float(l, [](vr::TrackedPropertyError *err) -> float { return s_vrInstance->GetTrackingRangeMaximumMeters(err); });
-}
-
-int Lua::openvr::lib::get_status_display_transform(lua_State *l)
-{
-	return get_property_mat3x4(l, [](vr::TrackedPropertyError *err) -> glm::mat3x4 { return s_vrInstance->GetStatusDisplayTransform(err); });
-}
-int Lua::openvr::lib::get_camera_to_head_transform(lua_State *l)
-{
-	return get_property_mat3x4(l, [](vr::TrackedPropertyError *err) -> glm::mat3x4 { return s_vrInstance->GetCameraToHeadTransform(err); });
-}
-
-int Lua::openvr::lib::get_hardware_revision_number(lua_State *l)
-{
-	return get_property_uint64(l, [](vr::TrackedPropertyError *err) -> uint64_t { return s_vrInstance->GetHardwareRevisionNumber(err); });
-}
-int Lua::openvr::lib::get_firmware_version(lua_State *l)
-{
-	return get_property_uint64(l, [](vr::TrackedPropertyError *err) -> uint64_t { return s_vrInstance->GetFirmwareVersion(err); });
-}
-int Lua::openvr::lib::get_fpga_version(lua_State *l)
-{
-	return get_property_uint64(l, [](vr::TrackedPropertyError *err) -> uint64_t { return s_vrInstance->GetFPGAVersion(err); });
-}
-int Lua::openvr::lib::get_vrc_version(lua_State *l)
-{
-	return get_property_uint64(l, [](vr::TrackedPropertyError *err) -> uint64_t { return s_vrInstance->GetVRCVersion(err); });
-}
-int Lua::openvr::lib::get_radio_version(lua_State *l)
-{
-	return get_property_uint64(l, [](vr::TrackedPropertyError *err) -> uint64_t { return s_vrInstance->GetRadioVersion(err); });
-}
-int Lua::openvr::lib::get_dongle_version(lua_State *l)
-{
-	return get_property_uint64(l, [](vr::TrackedPropertyError *err) -> uint64_t { return s_vrInstance->GetDongleVersion(err); });
-}
-int Lua::openvr::lib::get_current_universe_id(lua_State *l)
-{
-	return get_property_uint64(l, [](vr::TrackedPropertyError *err) -> uint64_t { return s_vrInstance->GetCurrentUniverseId(err); });
-}
-int Lua::openvr::lib::get_previous_universe_id(lua_State *l)
-{
-	return get_property_uint64(l, [](vr::TrackedPropertyError *err) -> uint64_t { return s_vrInstance->GetPreviousUniverseId(err); });
-}
-int Lua::openvr::lib::get_display_firmware_version(lua_State *l)
-{
-	return get_property_uint64(l, [](vr::TrackedPropertyError *err) -> uint64_t { return s_vrInstance->GetDisplayFirmwareVersion(err); });
-}
-int Lua::openvr::lib::get_camera_firmware_version(lua_State *l)
-{
-	return get_property_uint64(l, [](vr::TrackedPropertyError *err) -> uint64_t { return s_vrInstance->GetCameraFirmwareVersion(err); });
-}
-int Lua::openvr::lib::get_display_fpga_version(lua_State *l)
-{
-	return get_property_uint64(l, [](vr::TrackedPropertyError *err) -> uint64_t { return s_vrInstance->GetDisplayFPGAVersion(err); });
-}
-int Lua::openvr::lib::get_display_bootloader_version(lua_State *l)
-{
-	return get_property_uint64(l, [](vr::TrackedPropertyError *err) -> uint64_t { return s_vrInstance->GetDisplayBootloaderVersion(err); });
-}
-int Lua::openvr::lib::get_display_hardware_version(lua_State *l)
-{
-	return get_property_uint64(l, [](vr::TrackedPropertyError *err) -> uint64_t { return s_vrInstance->GetDisplayHardwareVersion(err); });
-}
-int Lua::openvr::lib::get_audio_firmware_version(lua_State *l)
-{
-	return get_property_uint64(l, [](vr::TrackedPropertyError *err) -> uint64_t { return s_vrInstance->GetAudioFirmwareVersion(err); });
-}
-int Lua::openvr::lib::get_supported_buttons(lua_State *l)
-{
-	return get_property_uint64(l, [](vr::TrackedPropertyError *err) -> uint64_t { return s_vrInstance->GetSupportedButtons(err); });
-}
-
-int Lua::openvr::lib::get_device_class(lua_State *l)
-{
-	return get_property_int32(l, [](vr::TrackedPropertyError *err) -> int32_t { return s_vrInstance->GetDeviceClass(err); });
-}
-int Lua::openvr::lib::get_display_mc_type(lua_State *l)
-{
-	return get_property_int32(l, [](vr::TrackedPropertyError *err) -> int32_t { return s_vrInstance->GetDisplayMCType(err); });
-}
-int Lua::openvr::lib::get_edid_vendor_id(lua_State *l)
-{
-	return get_property_int32(l, [](vr::TrackedPropertyError *err) -> int32_t { return s_vrInstance->GetEdidVendorID(err); });
-}
-int Lua::openvr::lib::get_edid_product_id(lua_State *l)
-{
-	return get_property_int32(l, [](vr::TrackedPropertyError *err) -> int32_t { return s_vrInstance->GetEdidProductID(err); });
-}
-int Lua::openvr::lib::get_display_gc_type(lua_State *l)
-{
-	return get_property_int32(l, [](vr::TrackedPropertyError *err) -> int32_t { return s_vrInstance->GetDisplayGCType(err); });
-}
-int Lua::openvr::lib::get_camera_compatibility_mode(lua_State *l)
-{
-	return get_property_int32(l, [](vr::TrackedPropertyError *err) -> int32_t { return s_vrInstance->GetCameraCompatibilityMode(err); });
-}
-int Lua::openvr::lib::get_axis0_type(lua_State *l)
-{
-	return get_property_int32(l, [](vr::TrackedPropertyError *err) -> int32_t { return s_vrInstance->GetAxis0Type(err); });
-}
-int Lua::openvr::lib::get_axis1_type(lua_State *l)
-{
-	return get_property_int32(l, [](vr::TrackedPropertyError *err) -> int32_t { return s_vrInstance->GetAxis1Type(err); });
-}
-int Lua::openvr::lib::get_axis2_type(lua_State *l)
-{
-	return get_property_int32(l, [](vr::TrackedPropertyError *err) -> int32_t { return s_vrInstance->GetAxis2Type(err); });
-}
-int Lua::openvr::lib::get_axis3_type(lua_State *l)
-{
-	return get_property_int32(l, [](vr::TrackedPropertyError *err) -> int32_t { return s_vrInstance->GetAxis3Type(err); });
-}
-int Lua::openvr::lib::get_axis4_type(lua_State *l)
-{
-	return get_property_int32(l, [](vr::TrackedPropertyError *err) -> int32_t { return s_vrInstance->GetAxis4Type(err); });
-}
-
-int Lua::openvr::lib::fade_to_color(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		return 0;
-	auto *col = Lua::CheckColor(l, 1);
-	auto tFade = Lua::CheckNumber(l, 2);
-	auto bBackground = false;
-	if(Lua::IsSet(l, 3))
-		bBackground = Lua::CheckBool(l, 3);
-	s_vrInstance->FadeToColor(*col, tFade, bBackground);
-	return 0;
-}
-int Lua::openvr::lib::fade_grid(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		return 0;
-	auto tFade = Lua::CheckNumber(l, 1);
-	auto bFadeIn = Lua::CheckNumber(l, 2);
-	s_vrInstance->FadeGrid(tFade, bFadeIn);
-	return 0;
-}
-int Lua::openvr::lib::show_mirror_window(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		return 0;
-	s_vrInstance->ShowMirrorWindow();
-	return 0;
-}
-int Lua::openvr::lib::hide_mirror_window(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		return 0;
-	s_vrInstance->HideMirrorWindow();
-	return 0;
-}
-int Lua::openvr::lib::is_mirror_window_visible(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		Lua::PushBool(l, false);
-	else
-		Lua::PushBool(l, s_vrInstance->IsMirrorWindowVisible());
-	return 1;
-}
-int Lua::openvr::lib::set_hmd_view_enabled(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		return 0;
-	auto b = Lua::CheckBool(l, 1);
-	s_vrInstance->SetHmdViewEnabled(b);
-	return 0;
-}
-int Lua::openvr::lib::is_hmd_view_enabled(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		Lua::PushBool(l, false);
-	else
-		Lua::PushBool(l, s_vrInstance->IsHmdViewEnabled());
-	return 1;
-}
-int Lua::openvr::lib::can_render_scene(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		Lua::PushBool(l, false);
-	else
-		Lua::PushBool(l, s_vrInstance->CanRenderScene());
-	return 1;
-}
-int Lua::openvr::lib::clear_last_submitted_frame(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		return 0;
-	s_vrInstance->ClearLastSubmittedFrame();
-	return 0;
-}
-int Lua::openvr::lib::clear_skybox_override(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		return 0;
-	s_vrInstance->ClearSkyboxOverride();
-	return 0;
-}
-int Lua::openvr::lib::compositor_bring_to_front(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		return 0;
-	s_vrInstance->CompositorBringToFront();
-	return 0;
-}
-int Lua::openvr::lib::compositor_dump_images(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		return 0;
-	s_vrInstance->CompositorDumpImages();
-	return 0;
-}
-int Lua::openvr::lib::compositor_go_to_back(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		return 0;
-	s_vrInstance->CompositorGoToBack();
-	return 0;
-}
-int Lua::openvr::lib::force_interleaved_reprojection_on(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		return 0;
-	auto b = Lua::CheckBool(l, 1);
-	s_vrInstance->ForceInterleavedReprojectionOn(b);
-	return 0;
-}
-int Lua::openvr::lib::force_reconnect_process(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		return 0;
-	s_vrInstance->ForceReconnectProcess();
-	return 0;
-}
-int Lua::openvr::lib::get_frame_time_remaining(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		Lua::PushNumber(l, 0.f);
-	else
-		Lua::PushNumber(l, s_vrInstance->GetFrameTimeRemaining());
-	return 1;
-}
-int Lua::openvr::lib::is_fullscreen(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		Lua::PushBool(l, false);
-	else
-		Lua::PushBool(l, s_vrInstance->IsFullscreen());
-	return 1;
-}
-int Lua::openvr::lib::should_app_render_with_low_resources(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		Lua::PushBool(l, false);
-	else
-		Lua::PushBool(l, s_vrInstance->ShouldAppRenderWithLowResources());
-	return 1;
-}
-int Lua::openvr::lib::suspend_rendering(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		return 0;
-	auto b = Lua::CheckBool(l, 1);
-	s_vrInstance->SuspendRendering(b);
-	return 0;
-}
-int Lua::openvr::lib::set_skybox_override(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		return 0;
-	int32_t arg = 1;
-	auto &img = Lua::Check<Lua::Vulkan::Image>(l, arg++);
-	if(Lua::IsSet(l, arg) == false) {
-		auto err = s_vrInstance->SetSkyboxOverride(img);
-		Lua::PushInt(l, umath::to_integral(err));
-		return 1;
-	}
-	auto &img2 = Lua::Check<Lua::Vulkan::Image>(l, arg++);
-	if(Lua::IsSet(l, arg) == false) {
-		auto err = s_vrInstance->SetSkyboxOverride(img, img2);
-		Lua::PushInt(l, umath::to_integral(err));
-		return 1;
-	}
-	auto &front = img;
-	auto &back = img2;
-	auto &left = Lua::Check<Lua::Vulkan::Image>(l, arg++);
-	auto &right = Lua::Check<Lua::Vulkan::Image>(l, arg++);
-	auto &top = Lua::Check<Lua::Vulkan::Image>(l, arg++);
-	auto &bottom = Lua::Check<Lua::Vulkan::Image>(l, arg++);
-	auto err = s_vrInstance->SetSkyboxOverride(front, back, left, right, top, bottom);
-	Lua::PushInt(l, umath::to_integral(err));
-	return 1;
-}
-int Lua::openvr::lib::get_cumulative_stats(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		return 0;
-	auto stats = s_vrInstance->GetCumulativeStats();
-	auto t = Lua::CreateTable(l);
-
-	const auto fAddAttribute = [l, t, &stats](const std::string id, uint32_t val) {
-		Lua::PushString(l, id);
-		Lua::PushInt(l, val);
-		Lua::SetTableValue(l, t);
+		std::optional<std::string> controller_axis_type_to_string(vr::EVRControllerAxisType controllerAxisType)
+		{
+			if(s_vrInstance == nullptr)
+				return {};
+			auto *sys = s_vrInstance->GetSystemInterface();
+			return sys->GetControllerAxisTypeNameFromEnum(controllerAxisType);
+		}
 	};
-	fAddAttribute("numFramePresents", stats.m_nNumFramePresents);
-	fAddAttribute("numDroppedFrames", stats.m_nNumDroppedFrames);
-	fAddAttribute("numReprojectedFrames", stats.m_nNumReprojectedFrames);
-	fAddAttribute("numFramePresentsOnStartup", stats.m_nNumFramePresentsOnStartup);
-	fAddAttribute("numDroppedFramesOnStartup", stats.m_nNumDroppedFramesOnStartup);
-	fAddAttribute("numReprojectedFramesOnStartup", stats.m_nNumReprojectedFramesOnStartup);
-	fAddAttribute("numLoading", stats.m_nNumLoading);
-	fAddAttribute("numFramePresentsLoading", stats.m_nNumFramePresentsLoading);
-	fAddAttribute("numDroppedFramesLoading", stats.m_nNumDroppedFramesLoading);
-	fAddAttribute("numReprojectedFramesLoading", stats.m_nNumReprojectedFramesLoading);
-	fAddAttribute("numTimedOut", stats.m_nNumTimedOut);
-	fAddAttribute("numFramePresentsTimedOut", stats.m_nNumFramePresentsTimedOut);
-	fAddAttribute("numDroppedFramesTimedOut", stats.m_nNumDroppedFramesTimedOut);
-	fAddAttribute("numReprojectedFramesTimedOut", stats.m_nNumReprojectedFramesTimedOut);
-	return 1;
-}
-int Lua::openvr::lib::get_tracking_space(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		return 0;
-	auto space = s_vrInstance->GetTrackingSpace();
-	Lua::PushInt(l, umath::to_integral(space));
-	return 1;
-}
-int Lua::openvr::lib::set_tracking_space(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		return 0;
-	auto space = Lua::CheckInt(l, 1);
-	s_vrInstance->SetTrackingSpace(static_cast<vr::ETrackingUniverseOrigin>(space));
-	return 0;
-}
-
-int Lua::openvr::lib::get_recommended_render_target_size(lua_State *l)
-{
-	if(s_vrInstance == nullptr) {
-		// Standard Vive resolution (per eye)
-		Lua::PushInt(l, 1'080);
-		Lua::PushInt(l, 1'200);
-	}
-	else {
-		auto *sys = s_vrInstance->GetSystemInterface();
-		auto width = 0u;
-		auto height = 0u;
-		sys->GetRecommendedRenderTargetSize(&width, &height);
-		Lua::PushInt(l, width);
-		Lua::PushInt(l, height);
-	}
-	return 2;
-}
-
-int Lua::openvr::lib::get_projection_matrix(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		Lua::Push<Mat4>(l, {});
-	else {
-		auto eye = Lua::CheckInt(l, 1);
-		auto nearZ = Lua::CheckNumber(l, 2);
-		auto farZ = Lua::CheckNumber(l, 3);
-		auto *sys = s_vrInstance->GetSystemInterface();
-		auto vrMat = sys->GetProjectionMatrix(static_cast<vr::EVREye>(eye), nearZ, farZ);
-		auto m = glm::transpose(reinterpret_cast<Mat4 &>(vrMat.m));
-		m = glm::scale(m, Vector3(1.f, -1.f, 1.f));
-		Lua::Push<Mat4>(l, m);
-	}
-	return 1;
-}
-
-int Lua::openvr::lib::get_projection_raw(lua_State *l)
-{
-	auto left = 0.f;
-	auto right = 0.f;
-	auto top = 0.f;
-	auto bottom = 0.f;
-	if(s_vrInstance != nullptr) {
-		auto *sys = s_vrInstance->GetSystemInterface();
-		auto eye = Lua::CheckInt(l, 1);
-		sys->GetProjectionRaw(static_cast<vr::EVREye>(eye), &left, &right, &top, &bottom);
-	}
-	Lua::PushNumber(l, left);
-	Lua::PushNumber(l, right);
-	Lua::PushNumber(l, top);
-	Lua::PushNumber(l, bottom);
-	return 4;
-}
-
-int Lua::openvr::lib::compute_distortion(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		return 0;
-	auto *sys = s_vrInstance->GetSystemInterface();
-	auto eye = Lua::CheckInt(l, 1);
-	auto fu = Lua::CheckNumber(l, 2);
-	auto fv = Lua::CheckNumber(l, 3);
-	vr::DistortionCoordinates_t distortion {};
-	auto b = sys->ComputeDistortion(static_cast<vr::EVREye>(eye), fu, fv, &distortion);
-	Lua::PushBool(l, b);
-	if(b == true) {
-		Lua::Push<Vector2>(l, reinterpret_cast<Vector2 &>(distortion.rfRed));
-		Lua::Push<Vector2>(l, reinterpret_cast<Vector2 &>(distortion.rfGreen));
-		Lua::Push<Vector2>(l, reinterpret_cast<Vector2 &>(distortion.rfBlue));
-		return 4;
-	}
-	return 1;
-}
-
-int Lua::openvr::lib::get_eye_to_head_transform(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		return 0;
-	auto *sys = s_vrInstance->GetSystemInterface();
-	auto eEye = static_cast<vr::EVREye>(Lua::CheckInt(l, 1));
-	auto *cam = luabind::object_cast_nothrow<pragma::CCameraComponent *>(luabind::object {luabind::from_stack(l, 2)}, static_cast<pragma::CCameraComponent *>(nullptr));
-	if(!cam)
-		return 0;
-	auto &eye = (eEye == vr::EVREye::Eye_Left) ? s_vrInstance->GetLeftEye() : s_vrInstance->GetRightEye();
-	Lua::Push<Mat4>(l, eye.GetEyeViewMatrix(*cam));
-	return 1;
-}
-
-int Lua::openvr::lib::get_time_since_last_vsync(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		return 0;
-	auto *sys = s_vrInstance->GetSystemInterface();
-	float secondsSinceLasyVsync = 0.f;
-	uint64_t pullFrameCounter = 0ull;
-	auto r = sys->GetTimeSinceLastVsync(&secondsSinceLasyVsync, &pullFrameCounter);
-	Lua::PushBool(l, r);
-	Lua::PushNumber(l, secondsSinceLasyVsync);
-	Lua::PushInt(l, pullFrameCounter);
-	return 3;
-}
-
-int Lua::openvr::lib::get_device_to_absolute_tracking_pose(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		return 0;
-	auto *sys = s_vrInstance->GetSystemInterface();
-	auto origin = Lua::CheckInt(l, 1);
-	auto predictedSecondsToPhotonsFromNow = Lua::CheckNumber(l, 2);
-	static std::vector<vr::TrackedDevicePose_t> trackedDevicePoseArray(vr::k_unMaxTrackedDeviceCount);
-	sys->GetDeviceToAbsoluteTrackingPose(static_cast<vr::ETrackingUniverseOrigin>(origin), predictedSecondsToPhotonsFromNow, trackedDevicePoseArray.data(), trackedDevicePoseArray.size());
-
-	auto t = Lua::CreateTable(l);
-	int32_t idx = 1;
-	for(auto &tdp : trackedDevicePoseArray) {
-		Lua::PushInt(l, idx++);
-		Lua::Push<vr::TrackedDevicePose_t>(l, tdp);
-		Lua::SetTableValue(l, t);
-
-		Lua::Pop(l, 1);
-	}
-	return 1;
-}
-
-int Lua::openvr::lib::compute_seconds_to_photons(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		return 0;
-	auto *sys = s_vrInstance->GetSystemInterface();
-	float fSecondsSinceLastVsync;
-	sys->GetTimeSinceLastVsync(&fSecondsSinceLastVsync, nullptr);
-
-	auto fDisplayFrequency = sys->GetFloatTrackedDeviceProperty(vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_DisplayFrequency_Float);
-	auto fFrameDuration = 1.f / fDisplayFrequency;
-	auto fVsyncToPhotons = sys->GetFloatTrackedDeviceProperty(vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_SecondsFromVsyncToPhotons_Float);
-
-	auto fPredictedSecondsFromNow = fFrameDuration - fSecondsSinceLastVsync + fVsyncToPhotons;
-	Lua::PushNumber(l, fPredictedSecondsFromNow);
-	return 1;
-}
-
-int Lua::openvr::lib::get_seated_zero_pose_to_standing_absolute_tracking_pose(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		return 0;
-	auto *sys = s_vrInstance->GetSystemInterface();
-	auto m = sys->GetSeatedZeroPoseToStandingAbsoluteTrackingPose();
-	Lua::Push<Mat3x4>(l, reinterpret_cast<Mat3x4 &>(m));
-	return 1;
-}
-
-int Lua::openvr::lib::get_tracked_device_class(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		return 0;
-	auto *sys = s_vrInstance->GetSystemInterface();
-	auto devIndex = Lua::CheckInt(l, 1);
-	auto deviceClass = sys->GetTrackedDeviceClass(devIndex);
-	Lua::PushInt(l, static_cast<int32_t>(deviceClass));
-	return 1;
-}
-
-int Lua::openvr::lib::is_tracked_device_connected(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		Lua::PushBool(l, false);
-	else {
-		auto *sys = s_vrInstance->GetSystemInterface();
-		auto devIndex = Lua::CheckInt(l, 1);
-		auto b = sys->IsTrackedDeviceConnected(devIndex);
-		Lua::PushBool(l, b);
-	}
-	return 1;
-}
-
-int Lua::openvr::lib::trigger_haptic_pulse(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		return 0;
-	auto *sys = s_vrInstance->GetSystemInterface();
-	auto devIndex = Lua::CheckInt(l, 1);
-	auto axisId = Lua::CheckInt(l, 2);
-	auto duration = Lua::CheckNumber(l, 3);
-	sys->TriggerHapticPulse(devIndex, axisId, duration * 1'000'000);
-	return 0;
-}
-
-struct LuaVRControllerState {
-	// If packet num matches that on your prior call, then the controller state hasn't been changed since
-	// your last call and there is no need to process it
-	uint32_t unPacketNum;
-
-	// bit flags for each of the buttons. Use ButtonMaskFromId to turn an ID into a mask
-	uint32_t ulButtonPressed;
-	uint32_t ulButtonTouched;
-
-	// Axis data for the controller's analog inputs
-	Vector2 rAxis0;
-	Vector2 rAxis1;
-	Vector2 rAxis2;
-	Vector2 rAxis3;
-	Vector2 rAxis4;
 };
 
-static LuaVRControllerState vr_controller_state_to_lua_controller_state(const vr::VRControllerState_t &in)
+template<class T>
+using TProperty = std::variant<vr::ETrackedPropertyError, std::pair<vr::ETrackedPropertyError, T>>;
+
+// Return type of getter member function pointer
+template<auto T>
+using TPropertyBaseType = std::invoke_result_t<decltype(T), openvr::Instance const *, vr::TrackedPropertyError *>;
+
+template<auto T> // T = Member function pointer to property getter-function (e.g. &openvr::Instance::GetTrackingSystemName)
+TProperty<TPropertyBaseType<T>> get_property(openvr::Instance *instance)
 {
-	auto r = LuaVRControllerState {};
-	r.unPacketNum = in.unPacketNum;
-	r.ulButtonPressed = in.ulButtonPressed;
-	r.ulButtonTouched = in.ulButtonTouched;
-	r.rAxis0 = {in.rAxis[0].x, in.rAxis[0].y};
-	r.rAxis1 = {in.rAxis[1].x, in.rAxis[1].y};
-	r.rAxis2 = {in.rAxis[2].x, in.rAxis[2].y};
-	r.rAxis3 = {in.rAxis[3].x, in.rAxis[3].y};
-	r.rAxis4 = {in.rAxis[4].x, in.rAxis[4].y};
-	return r;
+	if(!instance)
+		return vr::ETrackedPropertyError::TrackedProp_InvalidDevice;
+	vr::TrackedPropertyError err;
+	auto val = std::invoke(T, instance, &err);
+	return std::pair<vr::ETrackedPropertyError, TPropertyBaseType<T>> {err, std::move(val)};
 }
 
-int Lua::openvr::lib::get_controller_states(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		return 0;
-	auto *sys = s_vrInstance->GetSystemInterface();
-	auto t = Lua::CreateTable(l);
+namespace Lua::openvr {
+	Lua::map<std::string, uint32_t> get_cumulative_stats(lua_State *l, ::openvr::Instance &instance)
+	{
+		auto stats = s_vrInstance->GetCumulativeStats();
+		auto t = luabind::newtable(l);
 
-	vr::VRControllerState_t state {};
-	for(auto i = decltype(vr::k_unMaxTrackedDeviceCount) {0}; i < vr::k_unMaxTrackedDeviceCount; ++i) {
-		vr::VRControllerState_t state;
-		if(sys->GetControllerState(i, &state, sizeof(vr::VRControllerState_t))) {
-			Lua::PushInt(l, i);
-			Lua::Push<LuaVRControllerState>(l, vr_controller_state_to_lua_controller_state(state));
-			Lua::SetTableValue(l, t);
+		const auto fAddAttribute = [l, &t, &stats](const std::string id, uint32_t val) { t[id] = val; };
+		fAddAttribute("numFramePresents", stats.m_nNumFramePresents);
+		fAddAttribute("numDroppedFrames", stats.m_nNumDroppedFrames);
+		fAddAttribute("numReprojectedFrames", stats.m_nNumReprojectedFrames);
+		fAddAttribute("numFramePresentsOnStartup", stats.m_nNumFramePresentsOnStartup);
+		fAddAttribute("numDroppedFramesOnStartup", stats.m_nNumDroppedFramesOnStartup);
+		fAddAttribute("numReprojectedFramesOnStartup", stats.m_nNumReprojectedFramesOnStartup);
+		fAddAttribute("numLoading", stats.m_nNumLoading);
+		fAddAttribute("numFramePresentsLoading", stats.m_nNumFramePresentsLoading);
+		fAddAttribute("numDroppedFramesLoading", stats.m_nNumDroppedFramesLoading);
+		fAddAttribute("numReprojectedFramesLoading", stats.m_nNumReprojectedFramesLoading);
+		fAddAttribute("numTimedOut", stats.m_nNumTimedOut);
+		fAddAttribute("numFramePresentsTimedOut", stats.m_nNumFramePresentsTimedOut);
+		fAddAttribute("numDroppedFramesTimedOut", stats.m_nNumDroppedFramesTimedOut);
+		fAddAttribute("numReprojectedFramesTimedOut", stats.m_nNumReprojectedFramesTimedOut);
+		return t;
+	}
+
+	std::pair<uint32_t, uint32_t> get_recommended_render_target_size(vr::IVRSystem &sys)
+	{
+		auto width = 0u;
+		auto height = 0u;
+		sys.GetRecommendedRenderTargetSize(&width, &height);
+		return {width, height};
+	}
+
+	Mat4 get_projection_matrix(vr::IVRSystem &sys, vr::EVREye eye, float nearZ, float farZ)
+	{
+		auto vrMat = sys.GetProjectionMatrix(eye, nearZ, farZ);
+		auto m = glm::transpose(reinterpret_cast<Mat4 &>(vrMat.m));
+		return glm::scale(m, Vector3(1.f, -1.f, 1.f));
+	}
+
+	std::tuple<float, float, float, float> get_projection_raw(vr::IVRSystem &sys, vr::EVREye eye)
+	{
+		auto left = 0.f;
+		auto right = 0.f;
+		auto top = 0.f;
+		auto bottom = 0.f;
+		sys.GetProjectionRaw(eye, &left, &right, &top, &bottom);
+		return {left, right, top, bottom};
+	}
+
+	std::variant<bool, std::tuple<bool, Vector2, Vector2, Vector2>> compute_distortion(vr::IVRSystem &sys, vr::EVREye eye, float fu, float fv)
+	{
+		vr::DistortionCoordinates_t distortion {};
+		auto b = sys.ComputeDistortion(static_cast<vr::EVREye>(eye), fu, fv, &distortion);
+		if(b == true) {
+			Vector2 vred {distortion.rfRed[0], distortion.rfRed[1]};
+			Vector2 vgreen {distortion.rfGreen[0], distortion.rfGreen[1]};
+			Vector2 vblue {distortion.rfBlue[0], distortion.rfBlue[1]};
+			return std::tuple<bool, Vector2, Vector2, Vector2> {true, vred, vgreen, vblue};
 		}
+		return std::variant<bool, std::tuple<bool, Vector2, Vector2, Vector2>> {true};
 	}
-	return 1;
-}
 
-int Lua::openvr::lib::get_controller_state(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		return 0;
-	auto *sys = s_vrInstance->GetSystemInterface();
-	auto devIndex = Lua::CheckInt(l, 1);
-	vr::VRControllerState_t state {};
-	auto r = sys->GetControllerState(devIndex, &state, sizeof(vr::VRControllerState_t));
-	Lua::PushBool(l, r);
-	if(r == true) {
-		Lua::Push<LuaVRControllerState>(l, vr_controller_state_to_lua_controller_state(state));
-		return 2;
+	Mat4 get_eye_to_head_transform(vr::IVRSystem &sys, vr::EVREye eEye, pragma::CCameraComponent &cam)
+	{
+		auto &eye = (eEye == vr::EVREye::Eye_Left) ? s_vrInstance->GetLeftEye() : s_vrInstance->GetRightEye();
+		return eye.GetEyeViewMatrix(cam);
 	}
-	return 1;
-}
 
-int Lua::openvr::lib::get_controller_role(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		return 0;
-	auto devIndex = Lua::CheckInt(l, 1);
-	auto role = s_vrInstance->GetTrackedDeviceRole(devIndex);
-	Lua::PushInt(l, umath::to_integral(role));
-	return 1;
-}
-
-int Lua::openvr::lib::get_controller_state_with_pose(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		return 0;
-	auto *sys = s_vrInstance->GetSystemInterface();
-	auto origin = Lua::CheckInt(l, 1);
-	auto devIndex = Lua::CheckInt(l, 2);
-	vr::VRControllerState_t state {};
-	vr::TrackedDevicePose_t devPose {};
-	auto r = sys->GetControllerStateWithPose(static_cast<vr::TrackingUniverseOrigin>(origin), devIndex, &state, sizeof(vr::VRControllerState_t), &devPose);
-	Lua::PushBool(l, r);
-	if(r == true) {
-		Lua::Push<LuaVRControllerState>(l, vr_controller_state_to_lua_controller_state(state));
-		Lua::Push<vr::TrackedDevicePose_t>(l, devPose);
-		return 2;
+	std::tuple<bool, float, uint64_t> get_time_since_last_vsync(vr::IVRSystem &sys)
+	{
+		float secondsSinceLasyVsync = 0.f;
+		uint64_t pullFrameCounter = 0ull;
+		auto r = sys.GetTimeSinceLastVsync(&secondsSinceLasyVsync, &pullFrameCounter);
+		return std::tuple<bool, float, uint64_t> {r, secondsSinceLasyVsync, pullFrameCounter};
 	}
-	return 1;
-}
 
-int Lua::openvr::lib::get_pose_transform(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		return 0;
-	auto deviceIdx = Lua::CheckInt(l, 1);
-	vr::TrackedDevicePose_t pose {};
-	Mat4 m {};
-	if(s_vrInstance->GetPoseTransform(deviceIdx, pose, m) == false)
-		return 0;
-	Lua::Push<Mat4>(l, m);
-	Lua::Push<Vector3>(l, Vector3(pose.vVelocity.v[0], pose.vVelocity.v[1], pose.vVelocity.v[2]) * static_cast<float>(::util::pragma::metres_to_units(1.f)));
-	return 2;
-}
+	std::vector<vr::TrackedDevicePose_t> get_device_to_absolute_tracking_pose(lua_State *l, vr::IVRSystem &sys, vr::ETrackingUniverseOrigin origin, float predictedSecondsToPhotonsFromNow)
+	{
+		static std::vector<vr::TrackedDevicePose_t> trackedDevicePoseArray(vr::k_unMaxTrackedDeviceCount);
+		sys.GetDeviceToAbsoluteTrackingPose(origin, predictedSecondsToPhotonsFromNow, trackedDevicePoseArray.data(), trackedDevicePoseArray.size());
+		return trackedDevicePoseArray;
+	}
 
-static umath::Transform openvr_matrix_to_pragma_pose(const Mat4 &poseMatrix)
-{
-	Vector3 scale;
-	Vector3 skew;
-	::Vector4 perspective;
-	Vector3 pos;
-	Quat rot;
-	glm::decompose(poseMatrix, scale, rot, pos, skew, perspective);
-	rot = glm::conjugate(rot);
+	float compute_seconds_to_photons(vr::IVRSystem &sys)
+	{
+		float fSecondsSinceLastVsync;
+		sys.GetTimeSinceLastVsync(&fSecondsSinceLastVsync, nullptr);
 
-	static auto openVrToPragmaPoseTransform = uquat::create(EulerAngles(0.f, 180.f, 0.f));
-	rot = rot * openVrToPragmaPoseTransform;
-	pos *= static_cast<float>(::util::pragma::metres_to_units(1.f));
-	return umath::Transform {pos, rot};
-}
+		auto fDisplayFrequency = sys.GetFloatTrackedDeviceProperty(vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_DisplayFrequency_Float);
+		auto fFrameDuration = 1.f / fDisplayFrequency;
+		auto fVsyncToPhotons = sys.GetFloatTrackedDeviceProperty(vr::k_unTrackedDeviceIndex_Hmd, vr::Prop_SecondsFromVsyncToPhotons_Float);
 
-int Lua::openvr::lib::get_pose(lua_State *l)
-{
-	if(s_vrInstance == nullptr)
-		return 0;
-	auto deviceIdx = Lua::CheckInt(l, 1);
-	vr::TrackedDevicePose_t pose {};
-	Mat4 m {};
-	//if(s_vrInstance->GetPoseTransform(deviceIdx,pose,m) == false)
-	//	return 0;
-	m = s_vrInstance->GetPoseMatrix(deviceIdx);
+		auto fPredictedSecondsFromNow = fFrameDuration - fSecondsSinceLastVsync + fVsyncToPhotons;
+		return fPredictedSecondsFromNow;
+	}
 
-	m = glm::inverse(m);
-	auto mpose = openvr_matrix_to_pragma_pose(m);
+	Mat3x4 get_seated_zero_pose_to_standing_absolute_tracking_pose(vr::IVRSystem &sys)
+	{
+		auto m = sys.GetSeatedZeroPoseToStandingAbsoluteTrackingPose();
+		return reinterpret_cast<Mat3x4 &>(m);
+	}
+
+	void trigger_haptic_pulse(vr::IVRSystem &sys, vr::TrackedDeviceIndex_t devIndex, uint32_t axisId, float duration) { sys.TriggerHapticPulse(devIndex, axisId, duration * 1'000'000); }
+
+	struct LuaVRControllerState {
+		// If packet num matches that on your prior call, then the controller state hasn't been changed since
+		// your last call and there is no need to process it
+		uint32_t unPacketNum;
+
+		// bit flags for each of the buttons. Use ButtonMaskFromId to turn an ID into a mask
+		uint32_t ulButtonPressed;
+		uint32_t ulButtonTouched;
+
+		// Axis data for the controller's analog inputs
+		Vector2 rAxis0;
+		Vector2 rAxis1;
+		Vector2 rAxis2;
+		Vector2 rAxis3;
+		Vector2 rAxis4;
+	};
+
+	static LuaVRControllerState vr_controller_state_to_lua_controller_state(const vr::VRControllerState_t &in)
+	{
+		auto r = LuaVRControllerState {};
+		r.unPacketNum = in.unPacketNum;
+		r.ulButtonPressed = in.ulButtonPressed;
+		r.ulButtonTouched = in.ulButtonTouched;
+		r.rAxis0 = {in.rAxis[0].x, in.rAxis[0].y};
+		r.rAxis1 = {in.rAxis[1].x, in.rAxis[1].y};
+		r.rAxis2 = {in.rAxis[2].x, in.rAxis[2].y};
+		r.rAxis3 = {in.rAxis[3].x, in.rAxis[3].y};
+		r.rAxis4 = {in.rAxis[4].x, in.rAxis[4].y};
+		return r;
+	}
+
+	Lua::tb<LuaVRControllerState> get_controller_states(lua_State *l, vr::IVRSystem &sys)
+	{
+		auto t = luabind::newtable(l);
+
+		vr::VRControllerState_t state {};
+		for(auto i = decltype(vr::k_unMaxTrackedDeviceCount) {0}; i < vr::k_unMaxTrackedDeviceCount; ++i) {
+			vr::VRControllerState_t state;
+			if(sys.GetControllerState(i, &state, sizeof(vr::VRControllerState_t)))
+				t[i] = vr_controller_state_to_lua_controller_state(state);
+		}
+		return t;
+	}
+
+	std::optional<LuaVRControllerState> get_controller_state(vr::IVRSystem &sys, vr::TrackedDeviceIndex_t devIndex)
+	{
+		vr::VRControllerState_t state {};
+		auto r = sys.GetControllerState(devIndex, &state, sizeof(vr::VRControllerState_t));
+		if(r == true)
+			return vr_controller_state_to_lua_controller_state(state);
+		return {};
+	}
+
+	std::optional<std::pair<LuaVRControllerState, vr::TrackedDevicePose_t>> get_controller_state_with_pose(vr::IVRSystem &sys, vr::TrackingUniverseOrigin origin, vr::TrackedDeviceIndex_t devIndex)
+	{
+		vr::VRControllerState_t state {};
+		vr::TrackedDevicePose_t devPose {};
+		auto r = sys.GetControllerStateWithPose(origin, devIndex, &state, sizeof(vr::VRControllerState_t), &devPose);
+		if(r == true)
+			return std::pair<LuaVRControllerState, vr::TrackedDevicePose_t> {vr_controller_state_to_lua_controller_state(state), devPose};
+		return {};
+	}
+
+	std::optional<std::pair<Mat4, Vector3>> get_pose_transform(::openvr::Instance &instance, uint32_t deviceIdx)
+	{
+		vr::TrackedDevicePose_t pose {};
+		Mat4 m {};
+		if(instance.GetPoseTransform(deviceIdx, pose, m) == false)
+			return {};
+		return std::pair<Mat4, Vector3> {m, Vector3(pose.vVelocity.v[0], pose.vVelocity.v[1], pose.vVelocity.v[2]) * static_cast<float>(::util::pragma::metres_to_units(1.f))};
+	}
+
+	static umath::Transform openvr_matrix_to_pragma_pose(const Mat4 &poseMatrix)
+	{
+		Vector3 scale;
+		Vector3 skew;
+		::Vector4 perspective;
+		Vector3 pos;
+		Quat rot;
+		glm::decompose(poseMatrix, scale, rot, pos, skew, perspective);
+		rot = glm::conjugate(rot);
+
+		static auto openVrToPragmaPoseTransform = uquat::create(EulerAngles(0.f, 180.f, 0.f));
+		rot = rot * openVrToPragmaPoseTransform;
+		pos *= static_cast<float>(::util::pragma::metres_to_units(1.f));
+		return umath::Transform {pos, rot};
+	}
+
+	std::pair<umath::Transform, Vector3> get_pose(::openvr::Instance &instance, uint32_t deviceIdx)
+	{
+		vr::TrackedDevicePose_t pose {};
+		Mat4 m {};
+		//if(s_vrInstance->GetPoseTransform(deviceIdx,pose,m) == false)
+		//	return 0;
+		m = instance.GetPoseMatrix(deviceIdx);
+
+		m = glm::inverse(m);
+		auto mpose = openvr_matrix_to_pragma_pose(m);
 
 #if 0
 	auto o = mpose.GetOrigin();
@@ -1099,28 +467,27 @@ int Lua::openvr::lib::get_pose(lua_State *l)
 	std::cout<<pos0.x<<","<<pos0.y<<","<<pos0.z<<std::endl;
 #endif
 
-	// For some reason the position from GetPoseMatrix (which comes from WaitGetPoses)
-	// is incorrect, but the rotation is correct, while for GetPoseTransform it's the other way around.
-	// We're probably doing something wrong somewhere, but for now this will do as a work-around.
-	// TODO: FIXME
-	vr::TrackedDevicePose_t pose2 {};
-	Mat4 m2 {};
-	if(s_vrInstance->GetPoseTransform(deviceIdx, pose2, m2)) {
-		auto &pos = mpose.GetOrigin();
-		pos = {m2[3][0], m2[3][1], m2[3][2]};
-		pos *= static_cast<float>(::util::pragma::metres_to_units(1.f));
-	}
+		// For some reason the position from GetPoseMatrix (which comes from WaitGetPoses)
+		// is incorrect, but the rotation is correct, while for GetPoseTransform it's the other way around.
+		// We're probably doing something wrong somewhere, but for now this will do as a work-around.
+		// TODO: FIXME
+		vr::TrackedDevicePose_t pose2 {};
+		Mat4 m2 {};
+		if(s_vrInstance->GetPoseTransform(deviceIdx, pose2, m2)) {
+			auto &pos = mpose.GetOrigin();
+			pos = {m2[3][0], m2[3][1], m2[3][2]};
+			pos *= static_cast<float>(::util::pragma::metres_to_units(1.f));
+		}
 
-	static auto applyRotCorrection = true;
-	if(applyRotCorrection) {
-		static auto correctionRotation = uquat::create(EulerAngles {0.f, 180.f, 0.f});
-		mpose.RotateGlobal(correctionRotation);
-	}
+		static auto applyRotCorrection = true;
+		if(applyRotCorrection) {
+			static auto correctionRotation = uquat::create(EulerAngles {0.f, 180.f, 0.f});
+			mpose.RotateGlobal(correctionRotation);
+		}
 
-	Lua::Push<umath::Transform>(l, mpose);
-	Lua::Push<Vector3>(l, Vector3(pose.vVelocity.v[0], pose.vVelocity.v[1], pose.vVelocity.v[2]) * static_cast<float>(::util::pragma::metres_to_units(1.f)));
-	return 2;
-}
+		return std::pair<umath::Transform, Vector3> {mpose, Vector3(pose.vVelocity.v[0], pose.vVelocity.v[1], pose.vVelocity.v[2]) * static_cast<float>(::util::pragma::metres_to_units(1.f))};
+	}
+};
 
 static void add_event_data(const vr::VREvent_t &ev, luabind::object &t)
 {
@@ -1224,181 +591,211 @@ static void add_event_data(const vr::VREvent_t &ev, luabind::object &t)
 	}
 }
 
+void Lua::openvr::close() { s_vrInstance = nullptr; }
+
 void Lua::openvr::register_lua_library(Lua::Interface &l)
 {
 	auto *lua = l.GetState();
-	Lua::RegisterLibrary(lua, "openvr",
-	  {
-	    {"initialize", Lua::openvr::lib::initialize},
-	    {"preinitialize",
-	      +[](lua_State *l) -> int {
-		      ::openvr::preinitialize_openvr();
-		      return 0;
-	      }},
-	    {"is_hmd_present",
-	      +[](lua_State *l) -> int {
-		      Lua::PushBool(l, ::openvr::is_hmd_present());
-		      return 1;
-	      }},
-	    {"close", Lua::openvr::lib::close},
 
-	    {"property_error_to_string", Lua::openvr::lib::property_error_to_string}, {"init_error_to_string", Lua::openvr::lib::init_error_to_string}, {"compositor_error_to_string", Lua::openvr::lib::compositor_error_to_string}, {"button_id_to_string", Lua::openvr::lib::button_id_to_string},
-	    {"controller_axis_type_to_string", Lua::openvr::lib::controller_axis_type_to_string}, {"event_type_to_string", Lua::openvr::lib::event_type_to_string},
+	auto &modVr = l.RegisterLibrary("openvr");
+	modVr[luabind::def(
+	  "initialize", +[]() -> vr::EVRInitError {
+		  //static auto instance = pvr::XrInstance::Create();
+		  //for(;;)
+		  //	instance->Render();
+		  //return 0;
+		  vr::EVRInitError err;
+		  if(s_vrInstance != nullptr)
+			  err = vr::EVRInitError::VRInitError_None;
+		  else {
+			  std::vector<std::string> reqInstanceExtensions;
+			  std::vector<std::string> reqDeviceExtensions;
+			  s_vrInstance = ::openvr::Instance::Create(&err, reqInstanceExtensions, reqDeviceExtensions);
+		  }
+		  return err;
+	  })];
+	modVr[luabind::def("close", &Lua::openvr::close)];
+	modVr[luabind::def("preinitialize", &::openvr::preinitialize_openvr)];
+	modVr[luabind::def("is_hmd_present", &::openvr::is_hmd_present)];
+	modVr[luabind::def("get_tracked_device_serial_number", &::openvr::Instance::GetTrackedDeviceSerialNumber)];
+	modVr[luabind::def("get_tracked_device_type", &::openvr::Instance::GetTrackedDeviceType)];
+	modVr[luabind::def("update_poses", &::openvr::Instance::UpdateHMDPoses)];
+	modVr[luabind::def("get_hmd_pose_matrix", &::openvr::Instance::GetHMDPoseMatrix, luabind::copy_policy<0> {})];
+	modVr[luabind::def(
+	  "get_hmd_pose", +[]() -> umath::Transform {
+		  auto &hmdPoseMatrix = s_vrInstance->GetHMDPoseMatrix();
+		  return openvr_matrix_to_pragma_pose(hmdPoseMatrix);
+	  })];
+	modVr[luabind::def("get_eye", &get_eye)];
+	modVr[luabind::def(
+	  "submit_eye", +[](::openvr::Instance &instance, vr::EVREye eyeId) -> vr::EVRCompositorError {
+		  auto &eye = get_eye(eyeId);
+		  return instance.GetCompositorInterface()->Submit(eye.GetVREye(), &eye.GetVRTexture());
+	  })];
+	modVr[luabind::def(
+	  "set_eye_image", +[](::openvr::Instance &instance, vr::EVREye eyeIndex, prosper::IImage &img) {
+		  auto &eye = (eyeIndex == vr::EVREye::Eye_Left) ? s_vrInstance->GetLeftEye() : s_vrInstance->GetRightEye();
+		  eye.SetImage(img);
+	  })];
+	modVr[luabind::def(
+	  "poll_events", +[](lua_State *l, ::openvr::Instance &instance) -> Lua::map<std::string, luabind::object> {
+		  auto t = luabind::newtable(l);
+		  int32_t idx = 1;
+		  for(auto &ev : s_vrInstance->PollEvents()) {
+			  auto tEv = luabind::newtable(l);
+			  tEv["type"] = ev.eventType;
+			  auto data = luabind::newtable(l);
+			  tEv["data"] = data;
+			  tEv["trackedDeviceIndex"] = ev.trackedDeviceIndex;
+			  add_event_data(ev, data);
+			  t[idx++] = tEv;
+		  }
+		  return t;
+	  })];
+	modVr[luabind::def(
+	  "is_instance_valid", +[](::openvr::Instance *instance) { return instance != nullptr; })];
+	/*modVr[luabind::def(
+	  "run_openxr_demo", +[](::openvr::Instance *&instance) {
+		  std::vector<char *> args = {"", "-g", "Vulkan2", "-ff", "Hmd", "-vc", "Stereo", "-v"};
+		  run_openxr_demo(args.size(), args.data());
+		  return 0;
+	  })];*/
 
-	    {"get_tracking_system_name", Lua::openvr::lib::get_tracking_system_name}, {"get_model_number", Lua::openvr::lib::get_model_number}, {"get_serial_number", Lua::openvr::lib::get_serial_number}, {"get_render_model_name", Lua::openvr::lib::get_render_model_name},
-	    {"get_manufacturer_name", Lua::openvr::lib::get_manufacturer_name}, {"get_tracking_firmware_version", Lua::openvr::lib::get_tracking_firmware_version}, {"get_hardware_revision", Lua::openvr::lib::get_hardware_revision},
-	    {"get_all_wireless_dongle_descriptions", Lua::openvr::lib::get_all_wireless_dongle_descriptions}, {"get_connected_wireless_dongle", Lua::openvr::lib::get_connected_wireless_dongle}, {"get_firmware_manual_update_url", Lua::openvr::lib::get_firmware_manual_update_url},
-	    {"get_firmware_programming_target", Lua::openvr::lib::get_firmware_programming_target}, {"get_display_mc_image_left", Lua::openvr::lib::get_display_mc_image_left}, {"get_display_mc_image_right", Lua::openvr::lib::get_display_mc_image_right},
-	    {"get_display_gc_image", Lua::openvr::lib::get_display_gc_image}, {"get_camera_firmware_description", Lua::openvr::lib::get_camera_firmware_description}, {"get_attached_device_id", Lua::openvr::lib::get_attached_device_id}, {"get_model_label", Lua::openvr::lib::get_model_label},
+	modVr[luabind::def("fade_to_color", &::openvr::Instance::FadeToColor), luabind::def("fade_to_color", &::openvr::Instance::FadeToColor, luabind::default_parameter_policy<4, false> {})];
 
-	    {"will_drift_in_yaw", Lua::openvr::lib::will_drift_in_yaw}, {"device_is_wireless", Lua::openvr::lib::device_is_wireless}, {"device_is_charging", Lua::openvr::lib::device_is_charging}, {"firmware_update_available", Lua::openvr::lib::firmware_update_available},
-	    {"firmware_manual_update", Lua::openvr::lib::firmware_manual_update}, {"block_server_shutdown", Lua::openvr::lib::block_server_shutdown}, {"can_unify_coordinate_system_with_hmd", Lua::openvr::lib::can_unify_coordinate_system_with_hmd},
-	    {"contains_proximity_sensor", Lua::openvr::lib::contains_proximity_sensor}, {"device_provides_battery_status", Lua::openvr::lib::device_provides_battery_status}, {"device_can_power_off", Lua::openvr::lib::device_can_power_off}, {"has_camera", Lua::openvr::lib::has_camera},
-	    {"reports_time_since_vsync", Lua::openvr::lib::reports_time_since_vsync}, {"is_on_desktop", Lua::openvr::lib::is_on_desktop},
+	modVr[luabind::def("get_tracking_system_name", &get_property<&::openvr::Instance::GetTrackingSystemName>)];
+	modVr[luabind::def("get_model_number", &get_property<&::openvr::Instance::GetModelNumber>)];
+	modVr[luabind::def("get_serial_number", &get_property<&::openvr::Instance::GetSerialNumber>)];
+	modVr[luabind::def("get_render_model_name", &get_property<&::openvr::Instance::GetRenderModelName>)];
+	modVr[luabind::def("get_manufacturer_name", &get_property<&::openvr::Instance::GetManufacturerName>)];
+	modVr[luabind::def("get_tracking_firmware_version", &get_property<&::openvr::Instance::GetTrackingFirmwareVersion>)];
+	modVr[luabind::def("get_hardware_revision", &get_property<&::openvr::Instance::GetHardwareRevision>)];
+	modVr[luabind::def("get_all_wireless_dongle_descriptions", &get_property<&::openvr::Instance::GetAllWirelessDongleDescriptions>)];
+	modVr[luabind::def("get_connected_wireless_dongle", &get_property<&::openvr::Instance::GetConnectedWirelessDongle>)];
+	modVr[luabind::def("get_firmware_manual_update_url", &get_property<&::openvr::Instance::GetFirmwareManualUpdateURL>)];
+	modVr[luabind::def("get_firmware_programming_target", &get_property<&::openvr::Instance::GetFirmwareProgrammingTarget>)];
+	modVr[luabind::def("get_display_mc_image_left", &get_property<&::openvr::Instance::GetDisplayMCImageLeft>)];
+	modVr[luabind::def("get_display_mc_image_right", &get_property<&::openvr::Instance::GetDisplayMCImageRight>)];
+	modVr[luabind::def("get_display_gc_image", &get_property<&::openvr::Instance::GetDisplayGCImage>)];
+	modVr[luabind::def("get_camera_firmware_description", &get_property<&::openvr::Instance::GetCameraFirmwareDescription>)];
+	modVr[luabind::def("get_attached_device_id", &get_property<&::openvr::Instance::GetAttachedDeviceId>)];
+	modVr[luabind::def("get_model_label", &get_property<&::openvr::Instance::GetModelLabel>)];
+	modVr[luabind::def("will_drift_in_yaw", &get_property<&::openvr::Instance::WillDriftInYaw>)];
+	modVr[luabind::def("device_is_wireless", &get_property<&::openvr::Instance::DeviceIsWireless>)];
+	modVr[luabind::def("device_is_charging", &get_property<&::openvr::Instance::DeviceIsCharging>)];
+	modVr[luabind::def("firmware_update_available", &get_property<&::openvr::Instance::FirmwareUpdateAvailable>)];
+	modVr[luabind::def("firmware_manual_update", &get_property<&::openvr::Instance::FirmwareManualUpdate>)];
+	modVr[luabind::def("block_server_shutdown", &get_property<&::openvr::Instance::BlockServerShutdown>)];
+	modVr[luabind::def("can_unify_coordinate_system_with_hmd", &get_property<&::openvr::Instance::CanUnifyCoordinateSystemWithHmd>)];
+	modVr[luabind::def("contains_proximity_sensor", &get_property<&::openvr::Instance::ContainsProximitySensor>)];
+	modVr[luabind::def("device_provides_battery_status", &get_property<&::openvr::Instance::DeviceProvidesBatteryStatus>)];
+	modVr[luabind::def("reports_time_since_vsync", &get_property<&::openvr::Instance::ReportsTimeSinceVSync>)];
+	modVr[luabind::def("device_can_power_off", &get_property<&::openvr::Instance::DeviceCanPowerOff>)];
+	modVr[luabind::def("has_camera", &get_property<&::openvr::Instance::HasCamera>)];
+	modVr[luabind::def("is_on_desktop", &get_property<&::openvr::Instance::IsOnDesktop>)];
+	modVr[luabind::def("get_device_battery_percentage", &get_property<&::openvr::Instance::GetDeviceBatteryPercentage>)];
+	modVr[luabind::def("get_seconds_from_vsync_to_photons", &get_property<&::openvr::Instance::GetSecondsFromVsyncToPhotons>)];
+	modVr[luabind::def("get_display_frequency", &get_property<&::openvr::Instance::GetDisplayFrequency>)];
+	modVr[luabind::def("get_user_ipd_meters", &get_property<&::openvr::Instance::GetUserIpdMeters>)];
+	modVr[luabind::def("get_display_mc_offset", &get_property<&::openvr::Instance::GetDisplayMCOffset>)];
+	modVr[luabind::def("get_display_mc_scale", &get_property<&::openvr::Instance::GetDisplayMCScale>)];
+	modVr[luabind::def("get_display_gc_black_clamp", &get_property<&::openvr::Instance::GetDisplayGCBlackClamp>)];
+	modVr[luabind::def("get_display_gc_offset", &get_property<&::openvr::Instance::GetDisplayGCOffset>)];
+	modVr[luabind::def("get_display_gc_scale", &get_property<&::openvr::Instance::GetDisplayGCScale>)];
+	modVr[luabind::def("get_display_gc_prescale", &get_property<&::openvr::Instance::GetDisplayGCPrescale>)];
+	modVr[luabind::def("get_lens_center_left_u", &get_property<&::openvr::Instance::GetLensCenterLeftU>)];
+	modVr[luabind::def("get_lens_center_left_v", &get_property<&::openvr::Instance::GetLensCenterLeftV>)];
+	modVr[luabind::def("get_lens_center_left_uv", &get_property<&::openvr::Instance::GetLensCenterLeftUV>)];
+	modVr[luabind::def("get_lens_center_right_u", &get_property<&::openvr::Instance::GetLensCenterRightU>)];
+	modVr[luabind::def("get_lens_center_right_v", &get_property<&::openvr::Instance::GetLensCenterRightV>)];
+	modVr[luabind::def("get_lens_center_right_uv", &get_property<&::openvr::Instance::GetLensCenterRightUV>)];
+	modVr[luabind::def("get_user_head_to_eye_depth_meters", &get_property<&::openvr::Instance::GetUserHeadToEyeDepthMeters>)];
+	modVr[luabind::def("get_field_of_view_left_degrees", &get_property<&::openvr::Instance::GetFieldOfViewLeftDegrees>)];
+	modVr[luabind::def("get_field_of_view_right_degrees", &get_property<&::openvr::Instance::GetFieldOfViewRightDegrees>)];
+	modVr[luabind::def("get_field_of_view_top_degrees", &get_property<&::openvr::Instance::GetFieldOfViewTopDegrees>)];
+	modVr[luabind::def("get_field_of_view_bottom_degrees", &get_property<&::openvr::Instance::GetFieldOfViewBottomDegrees>)];
+	modVr[luabind::def("get_tracking_range_minimum_meters", &get_property<&::openvr::Instance::GetTrackingRangeMinimumMeters>)];
+	modVr[luabind::def("get_tracking_range_maximum_meters", &get_property<&::openvr::Instance::GetTrackingRangeMaximumMeters>)];
+	modVr[luabind::def("get_status_display_transform", &get_property<&::openvr::Instance::GetStatusDisplayTransform>)];
+	modVr[luabind::def("get_camera_to_head_transform", &get_property<&::openvr::Instance::GetCameraToHeadTransform>)];
+	modVr[luabind::def("get_hardware_revision_number", &get_property<&::openvr::Instance::GetHardwareRevisionNumber>)];
+	modVr[luabind::def("get_firmware_version", &get_property<&::openvr::Instance::GetFirmwareVersion>)];
+	modVr[luabind::def("get_fpga_version", &get_property<&::openvr::Instance::GetFPGAVersion>)];
+	modVr[luabind::def("get_vrc_version", &get_property<&::openvr::Instance::GetVRCVersion>)];
+	modVr[luabind::def("get_radio_version", &get_property<&::openvr::Instance::GetRadioVersion>)];
+	modVr[luabind::def("get_dongle_version", &get_property<&::openvr::Instance::GetDongleVersion>)];
+	modVr[luabind::def("get_current_universe_id", &get_property<&::openvr::Instance::GetCurrentUniverseId>)];
+	modVr[luabind::def("get_previous_universe_id", &get_property<&::openvr::Instance::GetPreviousUniverseId>)];
+	modVr[luabind::def("get_display_firmware_version", &get_property<&::openvr::Instance::GetDisplayFirmwareVersion>)];
+	modVr[luabind::def("get_camera_firmware_version", &get_property<&::openvr::Instance::GetCameraFirmwareVersion>)];
+	modVr[luabind::def("get_display_fpga_version", &get_property<&::openvr::Instance::GetDisplayFPGAVersion>)];
+	modVr[luabind::def("get_display_bootloader_version", &get_property<&::openvr::Instance::GetDisplayBootloaderVersion>)];
+	modVr[luabind::def("get_display_hardware_version", &get_property<&::openvr::Instance::GetDisplayHardwareVersion>)];
+	modVr[luabind::def("get_audio_firmware_version", &get_property<&::openvr::Instance::GetAudioFirmwareVersion>)];
+	modVr[luabind::def("get_supported_buttons", &get_property<&::openvr::Instance::GetSupportedButtons>)];
+	modVr[luabind::def("get_device_class", &get_property<&::openvr::Instance::GetDeviceClass>)];
+	modVr[luabind::def("get_display_mc_type", &get_property<&::openvr::Instance::GetDisplayMCType>)];
+	modVr[luabind::def("get_edid_vendor_id", &get_property<&::openvr::Instance::GetEdidVendorID>)];
+	modVr[luabind::def("get_edid_product_id", &get_property<&::openvr::Instance::GetEdidProductID>)];
+	modVr[luabind::def("get_display_gc_type", &get_property<&::openvr::Instance::GetDisplayGCType>)];
+	modVr[luabind::def("get_camera_compatibility_mode", &get_property<&::openvr::Instance::GetCameraCompatibilityMode>)];
+	modVr[luabind::def("get_axis0_type", &get_property<&::openvr::Instance::GetAxis0Type>)];
+	modVr[luabind::def("get_axis1_type", &get_property<&::openvr::Instance::GetAxis1Type>)];
+	modVr[luabind::def("get_axis2_type", &get_property<&::openvr::Instance::GetAxis2Type>)];
+	modVr[luabind::def("get_axis3_type", &get_property<&::openvr::Instance::GetAxis3Type>)];
+	modVr[luabind::def("get_axis4_type", &get_property<&::openvr::Instance::GetAxis4Type>)];
 
-	    {"get_device_battery_percentage", Lua::openvr::lib::get_device_battery_percentage}, {"get_seconds_from_vsync_to_photons", Lua::openvr::lib::get_seconds_from_vsync_to_photons}, {"get_display_frequency", Lua::openvr::lib::get_display_frequency},
-	    {"get_user_ipd_meters", Lua::openvr::lib::get_user_ipd_meters}, {"get_display_mc_offset", Lua::openvr::lib::get_display_mc_offset}, {"get_display_mc_scale", Lua::openvr::lib::get_display_mc_scale}, {"get_display_gc_black_clamp", Lua::openvr::lib::get_display_gc_black_clamp},
-	    {"get_display_gc_offset", Lua::openvr::lib::get_display_gc_offset}, {"get_display_gc_scale", Lua::openvr::lib::get_display_gc_scale}, {"get_display_gc_prescale", Lua::openvr::lib::get_display_gc_prescale}, {"get_lens_center_left_u", Lua::openvr::lib::get_lens_center_left_u},
-	    {"get_lens_center_left_v", Lua::openvr::lib::get_lens_center_left_v}, {"get_lens_center_left_uv", Lua::openvr::lib::get_lens_center_left_uv}, {"get_lens_center_right_u", Lua::openvr::lib::get_lens_center_right_u},
-	    {"get_lens_center_right_v", Lua::openvr::lib::get_lens_center_right_v}, {"get_lens_center_right_uv", Lua::openvr::lib::get_lens_center_right_uv}, {"get_user_head_to_eye_depth_meters", Lua::openvr::lib::get_user_head_to_eye_depth_meters},
-	    {"get_field_of_view_left_degrees", Lua::openvr::lib::get_field_of_view_left_degrees}, {"get_field_of_view_right_degrees", Lua::openvr::lib::get_field_of_view_right_degrees}, {"get_field_of_view_top_degrees", Lua::openvr::lib::get_field_of_view_top_degrees},
-	    {"get_field_of_view_bottom_degrees", Lua::openvr::lib::get_field_of_view_bottom_degrees}, {"get_tracking_range_minimum_meters", Lua::openvr::lib::get_tracking_range_minimum_meters}, {"get_tracking_range_maximum_meters", Lua::openvr::lib::get_tracking_range_maximum_meters},
+	modVr[luabind::def("fade_grid", &::openvr::Instance::FadeGrid)];
+	modVr[luabind::def("show_mirror_window", &::openvr::Instance::ShowMirrorWindow)];
+	modVr[luabind::def("hide_mirror_window", &::openvr::Instance::HideMirrorWindow)];
+	modVr[luabind::def("is_mirror_window_visible", &::openvr::Instance::IsMirrorWindowVisible)];
+	modVr[luabind::def("set_hmd_view_enabled", &::openvr::Instance::SetHmdViewEnabled)];
+	modVr[luabind::def("is_hmd_view_enabled", &::openvr::Instance::IsHmdViewEnabled)];
+	modVr[luabind::def("can_render_scene", &::openvr::Instance::CanRenderScene)];
+	modVr[luabind::def("clear_last_submitted_frame", &::openvr::Instance::ClearLastSubmittedFrame)];
+	modVr[luabind::def("clear_skybox_override", &::openvr::Instance::ClearSkyboxOverride)];
+	modVr[luabind::def("compositor_bring_to_front", &::openvr::Instance::CompositorBringToFront)];
+	modVr[luabind::def("compositor_dump_images", &::openvr::Instance::CompositorDumpImages)];
+	modVr[luabind::def("compositor_go_to_back", &::openvr::Instance::CompositorGoToBack)];
+	modVr[luabind::def("force_interleaved_reprojection_on", &::openvr::Instance::ForceInterleavedReprojectionOn)];
+	modVr[luabind::def("force_reconnect_process", &::openvr::Instance::ForceReconnectProcess)];
+	modVr[luabind::def("get_frame_time_remaining", &::openvr::Instance::GetFrameTimeRemaining)];
+	modVr[luabind::def("is_fullscreen", &::openvr::Instance::IsFullscreen)];
+	modVr[luabind::def("should_app_render_with_low_resources", &::openvr::Instance::ShouldAppRenderWithLowResources)];
+	modVr[luabind::def("suspend_rendering", &::openvr::Instance::SuspendRendering)];
+	modVr[luabind::def("get_tracking_space", &::openvr::Instance::GetTrackingSpace)];
+	modVr[luabind::def("set_tracking_space", &::openvr::Instance::SetTrackingSpace)];
+	modVr[luabind::def("get_tracked_device_class", &vr::IVRSystem::GetTrackedDeviceClass)];
+	modVr[luabind::def("get_controller_role", &::openvr::Instance::GetTrackedDeviceRole)];
+	modVr[luabind::def("is_tracked_device_connected", &vr::IVRSystem::IsTrackedDeviceConnected)];
+	modVr[luabind::def("set_skybox_override", static_cast<vr::EVRCompositorError (::openvr::Instance::*)(prosper::IImage &, prosper::IImage &, prosper::IImage &, prosper::IImage &, prosper::IImage &, prosper::IImage &) const>(&::openvr::Instance::SetSkyboxOverride))];
+	modVr[luabind::def("set_skybox_override", static_cast<vr::EVRCompositorError (::openvr::Instance::*)(prosper::IImage &, prosper::IImage &) const>(&::openvr::Instance::SetSkyboxOverride))];
+	modVr[luabind::def("set_skybox_override", static_cast<vr::EVRCompositorError (::openvr::Instance::*)(prosper::IImage &) const>(&::openvr::Instance::SetSkyboxOverride))];
 
-	    {"get_status_display_transform", Lua::openvr::lib::get_status_display_transform}, {"get_camera_to_head_transform", Lua::openvr::lib::get_camera_to_head_transform},
+	modVr[luabind::def("get_cumulative_stats", &::openvr::Instance::GetCumulativeStats)];
+	modVr[luabind::def("get_recommended_render_target_size", &get_recommended_render_target_size)];
+	modVr[luabind::def("get_projection_matrix", &get_projection_matrix)];
+	modVr[luabind::def("get_projection_raw", &get_projection_raw)];
+	modVr[luabind::def("compute_distortion", &compute_distortion)];
+	modVr[luabind::def("get_eye_to_head_transform", &get_eye_to_head_transform)];
+	modVr[luabind::def("get_time_since_last_vsync", &get_time_since_last_vsync)];
+	modVr[luabind::def("get_device_to_absolute_tracking_pose", &get_device_to_absolute_tracking_pose)];
+	modVr[luabind::def("compute_seconds_to_photons", &compute_seconds_to_photons)];
+	modVr[luabind::def("get_seated_zero_pose_to_standing_absolute_tracking_pose", &get_seated_zero_pose_to_standing_absolute_tracking_pose)];
+	modVr[luabind::def("trigger_haptic_pulse", &trigger_haptic_pulse)];
+	modVr[luabind::def("get_controller_state", &get_controller_state)];
+	modVr[luabind::def("get_controller_states", &get_controller_states)];
+	modVr[luabind::def("get_controller_state_with_pose", &get_controller_state_with_pose)];
 
-	    {"get_hardware_revision_number", Lua::openvr::lib::get_hardware_revision_number}, {"get_firmware_version", Lua::openvr::lib::get_firmware_version}, {"get_fpga_version", Lua::openvr::lib::get_fpga_version}, {"get_vrc_version", Lua::openvr::lib::get_vrc_version},
-	    {"get_radio_version", Lua::openvr::lib::get_radio_version}, {"get_dongle_version", Lua::openvr::lib::get_dongle_version}, {"get_current_universe_id", Lua::openvr::lib::get_current_universe_id}, {"get_previous_universe_id", Lua::openvr::lib::get_previous_universe_id},
-	    {"get_display_firmware_version", Lua::openvr::lib::get_display_firmware_version}, {"get_camera_firmware_version", Lua::openvr::lib::get_camera_firmware_version}, {"get_display_fpga_version", Lua::openvr::lib::get_display_fpga_version},
-	    {"get_display_bootloader_version", Lua::openvr::lib::get_display_bootloader_version}, {"get_display_hardware_version", Lua::openvr::lib::get_display_hardware_version}, {"get_audio_firmware_version", Lua::openvr::lib::get_audio_firmware_version},
-	    {"get_supported_buttons", Lua::openvr::lib::get_supported_buttons},
+	modVr[luabind::def("property_error_to_string", &property_error_to_string)];
+	modVr[luabind::def("init_error_to_string", &init_error_to_string)];
+	modVr[luabind::def("compositor_error_to_string", &compositor_error_to_string)];
+	modVr[luabind::def("button_id_to_string", &button_id_to_string)];
+	modVr[luabind::def("controller_axis_type_to_string", &controller_axis_type_to_string)];
+	modVr[luabind::def("event_type_to_string", &event_type_to_string)];
 
-	    {"get_device_class", Lua::openvr::lib::get_device_class}, {"get_display_mc_type", Lua::openvr::lib::get_display_mc_type}, {"get_edid_vendor_id", Lua::openvr::lib::get_edid_vendor_id}, {"get_edid_product_id", Lua::openvr::lib::get_edid_product_id},
-	    {"get_display_gc_type", Lua::openvr::lib::get_display_gc_type}, {"get_camera_compatibility_mode", Lua::openvr::lib::get_camera_compatibility_mode}, {"get_axis0_type", Lua::openvr::lib::get_axis0_type}, {"get_axis1_type", Lua::openvr::lib::get_axis1_type},
-	    {"get_axis2_type", Lua::openvr::lib::get_axis2_type}, {"get_axis3_type", Lua::openvr::lib::get_axis3_type}, {"get_axis4_type", Lua::openvr::lib::get_axis4_type},
-
-	    {"fade_to_color", Lua::openvr::lib::fade_to_color}, {"fade_grid", Lua::openvr::lib::fade_grid}, {"show_mirror_window", Lua::openvr::lib::show_mirror_window}, {"hide_mirror_window", Lua::openvr::lib::hide_mirror_window},
-	    {"is_mirror_window_visible", Lua::openvr::lib::is_mirror_window_visible}, {"set_hmd_view_enabled", Lua::openvr::lib::set_hmd_view_enabled}, {"is_hmd_view_enabled", Lua::openvr::lib::is_hmd_view_enabled},
-
-	    {"can_render_scene", Lua::openvr::lib::can_render_scene}, {"clear_last_submitted_frame", Lua::openvr::lib::clear_last_submitted_frame}, {"clear_skybox_override", Lua::openvr::lib::clear_skybox_override}, {"compositor_bring_to_front", Lua::openvr::lib::compositor_bring_to_front},
-	    {"compositor_dump_images", Lua::openvr::lib::compositor_dump_images}, {"compositor_go_to_back", Lua::openvr::lib::compositor_go_to_back}, {"force_interleaved_reprojection_on", Lua::openvr::lib::force_interleaved_reprojection_on},
-	    {"force_reconnect_process", Lua::openvr::lib::force_reconnect_process}, {"get_frame_time_remaining", Lua::openvr::lib::get_frame_time_remaining}, {"is_fullscreen", Lua::openvr::lib::is_fullscreen},
-	    {"should_app_render_with_low_resources", Lua::openvr::lib::should_app_render_with_low_resources}, {"suspend_rendering", Lua::openvr::lib::suspend_rendering}, {"set_skybox_override", Lua::openvr::lib::set_skybox_override},
-	    {"get_cumulative_stats", Lua::openvr::lib::get_cumulative_stats}, {"get_tracking_space", Lua::openvr::lib::get_tracking_space}, {"set_tracking_space", Lua::openvr::lib::set_tracking_space},
-
-	    {"get_recommended_render_target_size", Lua::openvr::lib::get_recommended_render_target_size}, {"get_projection_matrix", Lua::openvr::lib::get_projection_matrix}, {"get_projection_raw", Lua::openvr::lib::get_projection_raw},
-	    {"compute_distortion", Lua::openvr::lib::compute_distortion}, {"get_eye_to_head_transform", Lua::openvr::lib::get_eye_to_head_transform}, {"get_time_since_last_vsync", Lua::openvr::lib::get_time_since_last_vsync},
-	    {"get_device_to_absolute_tracking_pose", Lua::openvr::lib::get_device_to_absolute_tracking_pose}, {"compute_seconds_to_photons", Lua::openvr::lib::compute_seconds_to_photons},
-	    {"get_seated_zero_pose_to_standing_absolute_tracking_pose", Lua::openvr::lib::get_seated_zero_pose_to_standing_absolute_tracking_pose}, {"get_tracked_device_class", Lua::openvr::lib::get_tracked_device_class},
-	    {"is_tracked_device_connected", Lua::openvr::lib::is_tracked_device_connected}, {"trigger_haptic_pulse", Lua::openvr::lib::trigger_haptic_pulse}, {"get_controller_state", Lua::openvr::lib::get_controller_state}, {"get_controller_states", Lua::openvr::lib::get_controller_states},
-	    {"get_controller_state_with_pose", Lua::openvr::lib::get_controller_state_with_pose}, {"get_controller_role", Lua::openvr::lib::get_controller_role},
-	    {"get_tracked_device_serial_number",
-	      +[](lua_State *l) {
-		      if(s_vrInstance == nullptr)
-			      return 0;
-		      auto devIndex = Lua::CheckInt(l, 1);
-		      auto serialNumber = s_vrInstance->GetTrackedDeviceSerialNumber(devIndex);
-		      if(!serialNumber.has_value())
-			      return 0;
-		      Lua::PushString(l, *serialNumber);
-		      return 1;
-	      }},
-	    {"get_tracked_device_type",
-	      +[](lua_State *l) {
-		      if(s_vrInstance == nullptr)
-			      return 0;
-		      auto devIndex = Lua::CheckInt(l, 1);
-		      auto serialNumber = s_vrInstance->GetTrackedDeviceType(devIndex);
-		      if(!serialNumber.has_value())
-			      return 0;
-		      Lua::PushString(l, *serialNumber);
-		      return 1;
-	      }},
-	    {"get_pose_transform", Lua::openvr::lib::get_pose_transform}, {"get_pose", Lua::openvr::lib::get_pose}, {"update_poses", static_cast<int32_t (*)(lua_State *)>([](lua_State *l) -> int32_t {
-		                                                                                                             if(s_vrInstance)
-			                                                                                                             s_vrInstance->UpdateHMDPoses();
-		                                                                                                             return 0;
-	                                                                                                             })},
-	    {"get_hmd_pose_matrix", static_cast<int32_t (*)(lua_State *)>([](lua_State *l) -> int32_t {
-		     if(s_vrInstance == nullptr)
-			     Lua::Push<Mat4>(l, umat::identity());
-		     else
-			     Lua::Push<Mat4>(l, s_vrInstance->GetHMDPoseMatrix());
-		     return 1;
-	     })},
-	    {"get_hmd_pose", static_cast<int32_t (*)(lua_State *)>([](lua_State *l) -> int32_t {
-		     if(s_vrInstance == nullptr)
-			     Lua::Push<umath::Transform>(l, umath::Transform {});
-		     else {
-			     auto &hmdPoseMatrix = s_vrInstance->GetHMDPoseMatrix();
-			     auto pose = openvr_matrix_to_pragma_pose(hmdPoseMatrix);
-			     Lua::Push<umath::Transform>(l, pose);
-		     }
-		     return 1;
-	     })},
-	    {"get_eye", static_cast<int32_t (*)(lua_State *)>([](lua_State *l) -> int32_t {
-		     if(s_vrInstance == nullptr)
-			     return 0;
-		     auto &eye = get_eye(l, 1);
-		     Lua::Push<::openvr::Eye *>(l, const_cast<::openvr::Eye *>(&eye));
-		     return 1;
-	     })},
-	    {"submit_eye", static_cast<int32_t (*)(lua_State *)>([](lua_State *l) -> int32_t {
-		     if(s_vrInstance == nullptr) {
-			     Lua::PushInt(l, vr::EVRCompositorError::VRCompositorError_None);
-			     return 1;
-		     }
-		     auto &eye = get_eye(l, 1);
-		     Lua::PushInt(l, s_vrInstance->GetCompositorInterface()->Submit(eye.GetVREye(), &eye.GetVRTexture()));
-		     return 1;
-	     })},
-	    {"set_eye_image", static_cast<int32_t (*)(lua_State *)>([](lua_State *l) -> int32_t {
-		     if(s_vrInstance == nullptr)
-			     return 0;
-		     auto eyeIndex = static_cast<vr::EVREye>(Lua::CheckInt(l, 1));
-		     auto &img = Lua::Check<prosper::IImage>(l, 2);
-		     auto &eye = (eyeIndex == vr::EVREye::Eye_Left) ? s_vrInstance->GetLeftEye() : s_vrInstance->GetRightEye();
-		     eye.SetImage(img);
-		     return 0;
-	     })},
-	    {"poll_events", static_cast<int32_t (*)(lua_State *)>([](lua_State *l) -> int32_t {
-		     auto t = luabind::newtable(l);
-		     if(s_vrInstance == nullptr) {
-			     t.push(l);
-			     return 1;
-		     }
-		     int32_t idx = 1;
-		     for(auto &ev : s_vrInstance->PollEvents()) {
-			     auto tEv = luabind::newtable(l);
-			     tEv["type"] = ev.eventType;
-			     auto data = luabind::newtable(l);
-			     tEv["data"] = data;
-			     tEv["trackedDeviceIndex"] = ev.trackedDeviceIndex;
-			     add_event_data(ev, data);
-			     t[idx++] = tEv;
-		     }
-		     t.push(l);
-		     return 1;
-	     })},
-	    {"is_instance_valid", static_cast<int32_t (*)(lua_State *)>([](lua_State *l) -> int32_t {
-		     Lua::Push(l, s_vrInstance != nullptr);
-		     return 1;
-	     })},
-	    /*{"run_openxr_demo",static_cast<int32_t(*)(lua_State*)>([](lua_State *l) -> int32_t {
-			std::vector<char*> args = {
-				"",
-				"-g",
-				"Vulkan2",
-				"-ff",
-				"Hmd",
-				"-vc",
-				"Stereo",
-				"-v"
-			};
-			run_openxr_demo(args.size(),args.data());
-			return 0;
-		})}*/
-	  });
-	//int run_openxr_demo(int argc, char* argv[]) {
+	modVr[luabind::def("get_pose_transform", &get_pose_transform)];
+	modVr[luabind::def("get_pose", &get_pose)];
 
 	std::unordered_map<std::string, lua_Integer> propErrorEnums {
 	  {"TRACKED_PROPERTY_ERROR_SUCCESS", static_cast<int32_t>(vr::ETrackedPropertyError::TrackedProp_Success)},
@@ -1714,7 +1111,6 @@ void Lua::openvr::register_lua_library(Lua::Interface &l)
 	};
 	Lua::RegisterLibraryEnums(lua, "openvr", initErrorEnums);
 
-	auto &modVr = l.RegisterLibrary("openvr");
 	modVr[luabind::def(
 	  "reset_zero_pose", +[](vr::ETrackingUniverseOrigin origin) {
 		  if(s_vrInstance == nullptr)

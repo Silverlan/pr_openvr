@@ -18,10 +18,7 @@ void PRAGMA_EXPORT pragma_initialize_lua(Lua::Interface &l)
 		return;
 	Lua::openvr::register_lua_library(l);
 }
-void PRAGMA_EXPORT pragma_detach()
-{
-	Lua::openvr::lib::close(nullptr);
-}
+void PRAGMA_EXPORT pragma_detach() { Lua::openvr::close(); }
 void PRAGMA_EXPORT preinitialize_openvr() { ::openvr::preinitialize_openvr(); }
 bool PRAGMA_EXPORT is_hmd_present() { return ::openvr::is_hmd_present(); }
 /*
