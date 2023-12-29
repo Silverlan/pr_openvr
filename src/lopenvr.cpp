@@ -618,6 +618,7 @@ void Lua::openvr::register_lua_library(Lua::Interface &l)
 	modVr[luabind::def("preinitialize", &::openvr::preinitialize_openvr)];
 	modVr[luabind::def("is_hmd_present", &::openvr::is_hmd_present)];
 	modVr[luabind::def("get_tracked_device_serial_number", &::openvr::Instance::GetTrackedDeviceSerialNumber)];
+	modVr[luabind::def("get_tracked_device_activity_level", &::openvr::Instance::GetTrackedDeviceActivityLevel)];
 	modVr[luabind::def("get_tracked_device_type", &::openvr::Instance::GetTrackedDeviceType)];
 	modVr[luabind::def("update_poses", &::openvr::Instance::UpdateHMDPoses)];
 	modVr[luabind::def("get_hmd_pose_matrix", &::openvr::Instance::GetHMDPoseMatrix, luabind::copy_policy<0> {})];
@@ -810,6 +811,16 @@ void Lua::openvr::register_lua_library(Lua::Interface &l)
 	  {"TRACKED_PROPERTY_ERROR_NOT_YET_AVAILABLE", static_cast<int32_t>(vr::ETrackedPropertyError::TrackedProp_NotYetAvailable)},
 	};
 	Lua::RegisterLibraryEnums(lua, "openvr", propErrorEnums);
+
+	std::unordered_map<std::string, lua_Integer> activityLevelEnums {
+	  {"DEVICE_ACTIVITY_LEVEL_UNKNOWN", static_cast<int32_t>(vr::EDeviceActivityLevel::k_EDeviceActivityLevel_Unknown)},
+	  {"DEVICE_ACTIVITY_LEVEL_IDLE", static_cast<int32_t>(vr::EDeviceActivityLevel::k_EDeviceActivityLevel_Idle)},
+	  {"DEVICE_ACTIVITY_LEVEL_USER_INTERACTION", static_cast<int32_t>(vr::EDeviceActivityLevel::k_EDeviceActivityLevel_UserInteraction)},
+	  {"DEVICE_ACTIVITY_LEVEL_USER_INTERACTION_TIMEOUT", static_cast<int32_t>(vr::EDeviceActivityLevel::k_EDeviceActivityLevel_UserInteraction_Timeout)},
+	  {"DEVICE_ACTIVITY_LEVEL_STANDBY", static_cast<int32_t>(vr::EDeviceActivityLevel::k_EDeviceActivityLevel_Standby)},
+	  {"DEVICE_ACTIVITY_LEVEL_IDLE_TIMEOUT", static_cast<int32_t>(vr::EDeviceActivityLevel::k_EDeviceActivityLevel_Idle_Timeout)},
+	};
+	Lua::RegisterLibraryEnums(lua, "openvr", activityLevelEnums);
 
 	std::unordered_map<std::string, lua_Integer> propTrackingResults {
 	  {"TRACKING_RESULT_UNINITIALIZED", umath::to_integral(vr::ETrackingResult::TrackingResult_Uninitialized)},

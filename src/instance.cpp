@@ -840,6 +840,7 @@ vr::ETrackedControllerRole Instance::GetTrackedDeviceRole(uint32_t deviceIdx) co
 		return vr::ETrackedControllerRole::TrackedControllerRole_Invalid;
 	return static_cast<vr::ETrackedControllerRole>(controllerRole);
 }
+vr::EDeviceActivityLevel Instance::GetTrackedDeviceActivityLevel(uint32_t deviceIdx) const { return m_system->GetTrackedDeviceActivityLevel(deviceIdx); }
 std::optional<std::string> Instance::GetTrackedDeviceSerialNumber(uint32_t deviceIdx) const
 {
 	vr::TrackedPropertyError err;
