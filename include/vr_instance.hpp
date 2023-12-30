@@ -37,6 +37,7 @@ namespace openvr {
 	Mat4 steam_vr_matrix_to_engine_matrix(const vr::HmdMatrix34_t &matPose);
 	bool is_hmd_present();
 	void preinitialize_openvr();
+	void initialize_vulkan_texture_data(vr::VRVulkanTextureData_t &vrTextureData, prosper::IImage &img);
 
 	class IInstance {};
 

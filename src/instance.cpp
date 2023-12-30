@@ -458,6 +458,22 @@ OpenVrInitializer::~OpenVrInitializer()
 	if(m_ivrSystem)
 		vr::VR_Shutdown();
 }
+
+void openvr::initialize_vulkan_texture_data(vr::VRVulkanTextureData_t &vrTextureData, prosper::IImage &img)
+{
+	auto &renderContext = c_engine->GetRenderContext();
+	vrTextureData.m_nImage = reinterpret_cast<uint64_t>(img.GetInternalHandle());
+	vrTextureData.m_pDevice = static_cast<VkDevice_T *>(renderContext.GetInternalDevice());
+	vrTextureData.m_pPhysicalDevice = static_cast<VkPhysicalDevice_T *>(renderContext.GetInternalPhysicalDevice());
+	vrTextureData.m_pInstance = static_cast<VkInstance_T *>(renderContext.GetInternalInstance());
+	vrTextureData.m_pQueue = static_cast<VkQueue_T *>(renderContext.GetInternalUniversalQueue());
+	vrTextureData.m_nQueueFamilyIndex = renderContext.GetUniversalQueueFamilyIndex();
+	vrTextureData.m_nWidth = img.GetWidth();
+	vrTextureData.m_nHeight = img.GetHeight();
+	vrTextureData.m_nFormat = umath::to_integral(img.GetFormat());
+	vrTextureData.m_nSampleCount = umath::to_integral(img.GetSampleCount());
+}
+
 static std::unique_ptr<OpenVrInitializer> g_openVrInitializer = nullptr;
 
 void openvr::preinitialize_openvr()
@@ -801,21 +817,41 @@ vr::Compositor_CumulativeStats Instance::GetCumulativeStats() const
 }
 vr::EVRCompositorError Instance::SetSkyboxOverride(const std::vector<prosper::IImage *> &images) const
 {
+	vr::ETextureType texType;
+	std::vector<vr::VRVulkanTextureData_t> vkHandles;
+	std::vector<void *> glHandles;
+	switch(m_renderAPI) {
+	case RenderAPI::OpenGL:
+		{
+			glHandles.reserve(images.size());
+			for(auto *img : images) {
+				glHandles.push_back({});
+				glHandles.back() = const_cast<void *>(img->GetInternalHandle());
+			}
+			texType = vr::ETextureType::TextureType_OpenGL;
+			break;
+		}
+	case RenderAPI::Vulkan:
+		{
+			vkHandles.reserve(images.size());
+			for(auto *img : images) {
+				vkHandles.push_back({});
+				auto &vkData = vkHandles.back();
+				openvr::initialize_vulkan_texture_data(vkData, *img);
+			}
+			texType = vr::ETextureType::TextureType_Vulkan;
+			break;
+		}
+	}
+
 	auto renderAPI = c_engine->GetRenderContext().GetAPIIdentifier();
 	std::vector<vr::Texture_t> imgTexData(images.size());
 	for(auto i = decltype(images.size()) {0}; i < images.size(); ++i) {
 		auto &img = images.at(i);
 		auto &texData = imgTexData.at(i);
 		texData.eColorSpace = vr::EColorSpace::ColorSpace_Auto;
-		texData.handle = const_cast<void *>(img->GetInternalHandle());
-		switch(m_renderAPI) {
-		case RenderAPI::OpenGL:
-			texData.eType = vr::ETextureType::TextureType_OpenGL;
-			break;
-		case RenderAPI::Vulkan:
-			texData.eType = vr::ETextureType::TextureType_Vulkan;
-			break;
-		}
+		texData.handle = (texType == vr::ETextureType::TextureType_Vulkan) ? &(vkHandles[i]) : glHandles[i];
+		texData.eType = texType;
 	}
 	return m_compositor->SetSkyboxOverride(imgTexData.data(), imgTexData.size());
 }

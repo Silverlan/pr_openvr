@@ -34,16 +34,7 @@ void openvr::Eye::SetImage(prosper::IImage &img)
 		{
 			auto &renderContext = c_engine->GetRenderContext();
 			auto &vrTextureData = (m_vrVkTextureData = vr::VRVulkanTextureData_t {});
-			vrTextureData->m_nImage = reinterpret_cast<uint64_t>(img.GetInternalHandle());
-			vrTextureData->m_pDevice = static_cast<VkDevice_T *>(renderContext.GetInternalDevice());
-			vrTextureData->m_pPhysicalDevice = static_cast<VkPhysicalDevice_T *>(renderContext.GetInternalPhysicalDevice());
-			vrTextureData->m_pInstance = static_cast<VkInstance_T *>(renderContext.GetInternalInstance());
-			vrTextureData->m_pQueue = static_cast<VkQueue_T *>(renderContext.GetInternalUniversalQueue());
-			vrTextureData->m_nQueueFamilyIndex = renderContext.GetUniversalQueueFamilyIndex();
-			vrTextureData->m_nWidth = img.GetWidth();
-			vrTextureData->m_nHeight = img.GetHeight();
-			vrTextureData->m_nFormat = umath::to_integral(img.GetFormat());
-			vrTextureData->m_nSampleCount = umath::to_integral(img.GetSampleCount());
+			openvr::initialize_vulkan_texture_data(*vrTextureData, img);
 			m_vrTexture = {&vrTextureData /* handle */, vr::TextureType_Vulkan, vr::EColorSpace::ColorSpace_Auto};
 			break;
 		}
