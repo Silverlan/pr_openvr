@@ -764,6 +764,7 @@ void Lua::openvr::register_lua_library(Lua::Interface &l)
 	modVr[luabind::def("is_fullscreen", &::openvr::Instance::IsFullscreen)];
 	modVr[luabind::def("should_app_render_with_low_resources", &::openvr::Instance::ShouldAppRenderWithLowResources)];
 	modVr[luabind::def("suspend_rendering", &::openvr::Instance::SuspendRendering)];
+	modVr[luabind::def("is_rendering_suspended", &::openvr::Instance::IsRenderingSuspended)];
 	modVr[luabind::def("get_tracking_space", &::openvr::Instance::GetTrackingSpace)];
 	modVr[luabind::def("set_tracking_space", &::openvr::Instance::SetTrackingSpace)];
 	modVr[luabind::def("get_tracked_device_class", &vr::IVRSystem::GetTrackedDeviceClass)];

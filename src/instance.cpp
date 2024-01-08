@@ -866,7 +866,12 @@ void Instance::ForceReconnectProcess() const { m_compositor->ForceReconnectProce
 float Instance::GetFrameTimeRemaining() const { return m_compositor->GetFrameTimeRemaining(); }
 bool Instance::IsFullscreen() const { return m_compositor->IsFullscreen(); }
 bool Instance::ShouldAppRenderWithLowResources() const { return m_compositor->ShouldAppRenderWithLowResources(); }
-void Instance::SuspendRendering(bool b) const { m_compositor->SuspendRendering(b); }
+void Instance::SuspendRendering(bool b) const
+{
+	m_isRenderingSuspended = b;
+	m_compositor->SuspendRendering(b);
+}
+bool Instance::IsRenderingSuspended() const { return m_isRenderingSuspended; }
 //#include <chrono>
 vr::ETrackedControllerRole Instance::GetTrackedDeviceRole(uint32_t deviceIdx) const
 {

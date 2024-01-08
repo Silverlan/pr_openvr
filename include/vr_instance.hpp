@@ -177,6 +177,7 @@ namespace openvr {
 		bool IsFullscreen() const;
 		bool ShouldAppRenderWithLowResources() const;
 		void SuspendRendering(bool b) const;
+		bool IsRenderingSuspended() const;
 		vr::EVRCompositorError SetSkyboxOverride(prosper::IImage &img) const;
 		vr::EVRCompositorError SetSkyboxOverride(prosper::IImage &img, prosper::IImage &img2) const;
 		vr::EVRCompositorError SetSkyboxOverride(prosper::IImage &front, prosper::IImage &back, prosper::IImage &left, prosper::IImage &right, prosper::IImage &top, prosper::IImage &bottom) const;
@@ -214,6 +215,7 @@ namespace openvr {
 		std::unique_ptr<Eye> m_rightEye;
 		std::function<void(uint32_t, uint32_t, GLFW::KeyState)> m_controllerStateCallback = nullptr;
 		bool m_bHmdViewEnabled = false;
+		mutable bool m_isRenderingSuspended = false;
 		RenderAPI m_renderAPI = RenderAPI::OpenGL;
 
 		void OnControllerStateChanged(uint32_t controllerId, uint32_t key, GLFW::KeyState state);
