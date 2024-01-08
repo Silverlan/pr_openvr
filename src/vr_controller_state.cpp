@@ -29,10 +29,10 @@ void openvr::ControllerState::UpdateState(const vr::VRControllerState_t &state)
 		while(v > 0) {
 			if(state.ulButtonTouched & v) {
 				if(!(m_vrState.ulButtonTouched & v))
-					std::cout << "Button " << v << " has been touched!" << std::endl; // Touched
+					; // std::cout << "Button " << v << " has been touched!" << std::endl; // Touched
 			}
 			else if(m_vrState.ulButtonTouched & v)
-				std::cout << "Button " << v << " has been detouched!" << std::endl; // Detouched
+				; // std::cout << "Button " << v << " has been detouched!" << std::endl; // Detouched
 			v >>= 1u;
 		}
 	}
