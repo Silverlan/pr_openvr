@@ -774,6 +774,8 @@ void Lua::openvr::register_lua_library(Lua::Interface &l)
 	modVr[luabind::def("set_skybox_override", static_cast<vr::EVRCompositorError (::openvr::Instance::*)(prosper::IImage &, prosper::IImage &) const>(&::openvr::Instance::SetSkyboxOverride))];
 	modVr[luabind::def("set_skybox_override", static_cast<vr::EVRCompositorError (::openvr::Instance::*)(prosper::IImage &) const>(&::openvr::Instance::SetSkyboxOverride))];
 
+	modVr[luabind::def(
+	  "is_initialized", +[](lua_State *l) { return luabind::detail::get_openvr_instance(l) != nullptr; })];
 	modVr[luabind::def("get_cumulative_stats", &::openvr::Instance::GetCumulativeStats)];
 	modVr[luabind::def("get_recommended_render_target_size", &get_recommended_render_target_size)];
 	modVr[luabind::def("get_projection_matrix", &get_projection_matrix)];
