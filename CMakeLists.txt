@@ -56,4 +56,8 @@ else()
 	set_target_properties(openvr_api PROPERTIES FOLDER third_party)
 endif()
 
+
+
 register_pragma_module(${PROJ_NAME})
+
+add_dependencies(${PROJ_NAME} Anvil)
