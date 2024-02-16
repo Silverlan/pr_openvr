@@ -1,6 +1,7 @@
 #ifndef __VR_CONTROLLER_STATE_HPP__
 #define __VR_CONTROLLER_STATE_HPP__
 
+#include <functional>
 #include <openvr.h>
 #include <iglfw/glfw_keys.h>
 
