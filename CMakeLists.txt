@@ -58,13 +58,14 @@ search_lib_recursive(DEPENDENCY_OPENVR_LIBRARY third_party/openvr/lib/${OPENVR_A
 # set(PRECOMPILED_HEADER "stdafx")
 
 
-link_external_library(client)
 link_external_library(iclient)
 link_external_library(openvr)
 link_external_library(glfw)
 link_external_library(iglfw)
 link_external_library(prosper)
 link_external_library(anvil)
+link_external_library(client)
+link_external_library(cengine)
 link_external_library(vulkan)
 link_external_library(glslang)
 link_external_library(wgui)
