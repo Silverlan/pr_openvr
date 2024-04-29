@@ -64,7 +64,6 @@ link_external_library(openvr)
 link_external_library(glfw)
 link_external_library(iglfw)
 link_external_library(prosper)
-link_external_library(anvil)
 link_external_library(client)
 link_external_library(cengine)
 link_external_library(glslang)
@@ -81,7 +80,6 @@ link_external_library(ishared)
 link_external_library(lua)
 
 add_include_dir(glm)
-add_include_dir(anvil_build)
 add_include_dir(iglfw)
 add_include_dir(ishared)
 add_include_dir(mathutil)
@@ -95,7 +93,6 @@ add_include_dir(materialsystem)
 add_include_dir(cmaterialsystem)
 add_include_dir(util_udm)
 
-add_def(ANVIL_VULKAN_CPP)
 add_def(USE_VULKAN)
 add_def(ALSYS_LIBRARY_TYPE)
 
@@ -117,5 +114,3 @@ endif()
 
 
 register_pragma_module(${PROJ_NAME})
-
-add_dependencies(${PROJ_NAME} Anvil)
