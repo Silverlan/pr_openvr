@@ -888,6 +888,7 @@ std::optional<std::string> Instance::GetTrackedDeviceSerialNumber(uint32_t devic
 	auto serialNumber = GetTrackedDeviceString(deviceIdx, vr::ETrackedDeviceProperty::Prop_SerialNumber_String, &err);
 	if(err != vr::TrackedProp_Success)
 		return {};
+	ustring::remove_whitespace(serialNumber);
 	return serialNumber;
 }
 std::optional<std::string> Instance::GetTrackedDeviceType(uint32_t deviceIdx) const
