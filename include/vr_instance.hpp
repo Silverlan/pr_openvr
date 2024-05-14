@@ -13,6 +13,7 @@
 #include <mathutil/color.h>
 #include <mathutil/umat.h>
 #include <mathutil/uvec.h>
+#include <mathutil/transform.hpp>
 #include "vr_eye.hpp"
 
 struct lua_State;
@@ -187,6 +188,9 @@ namespace openvr {
 
 		void UpdateHMDPoses();
 
+		void SetDeviceZeroPose(uint32_t deviceIndex, const umath::Transform &pose);
+		const umath::Transform *GetInverseDeviceZeroPose(uint32_t deviceIndex) const;
+
 		const Mat4 &GetHMDPoseMatrix() const;
 		const Mat4 &GetPoseMatrix(uint32_t deviceIndex) const;
 		const std::vector<vr::VREvent_t> &PollEvents();
@@ -213,6 +217,7 @@ namespace openvr {
 		Mat4 m_hmdPoseMatrix = umat::identity();
 		std::unique_ptr<Eye> m_leftEye;
 		std::unique_ptr<Eye> m_rightEye;
+		std::vector<umath::Transform> m_invDeviceZeroPoses;
 		std::function<void(uint32_t, uint32_t, GLFW::KeyState)> m_controllerStateCallback = nullptr;
 		bool m_bHmdViewEnabled = false;
 		mutable bool m_isRenderingSuspended = false;

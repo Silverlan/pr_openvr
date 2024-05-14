@@ -556,6 +556,19 @@ Mat4 openvr::steam_vr_matrix_to_engine_matrix(const vr::HmdMatrix34_t &matPose)
 const Mat4 &Instance::GetHMDPoseMatrix() const { return m_hmdPoseMatrix; }
 const Mat4 &Instance::GetPoseMatrix(uint32_t deviceIndex) const { return m_poseTransforms.at(deviceIndex); }
 
+void Instance::SetDeviceZeroPose(uint32_t deviceIndex, const umath::Transform &pose)
+{
+	if(deviceIndex >= m_invDeviceZeroPoses.size())
+		m_invDeviceZeroPoses.resize(deviceIndex + 1);
+	m_invDeviceZeroPoses[deviceIndex] = pose.GetInverse();
+}
+const umath::Transform *Instance::GetInverseDeviceZeroPose(uint32_t deviceIndex) const
+{
+	if(deviceIndex >= m_invDeviceZeroPoses.size())
+		return nullptr;
+	return &m_invDeviceZeroPoses[deviceIndex];
+}
+
 void Instance::UpdateHMDPoses()
 {
 	//auto t = std::chrono::high_resolution_clock::now();

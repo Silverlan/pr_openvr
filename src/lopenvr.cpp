@@ -448,7 +448,7 @@ namespace Lua::openvr {
 		return umath::Transform {pos, rot};
 	}
 
-	std::pair<umath::Transform, Vector3> get_pose(::openvr::Instance &instance, uint32_t deviceIdx)
+	std::pair<umath::Transform, Vector3> get_raw_pose(::openvr::Instance &instance, uint32_t deviceIdx)
 	{
 		vr::TrackedDevicePose_t pose {};
 		Mat4 m {};
@@ -458,14 +458,6 @@ namespace Lua::openvr {
 
 		m = glm::inverse(m);
 		auto mpose = openvr_matrix_to_pragma_pose(m);
-
-#if 0
-	auto o = mpose.GetOrigin();
-	auto pos0 = Vector3{m[3][0],m[3][1],m[3][2]};
-	std::cout<<"Test:"<<std::endl;
-	std::cout<<o.x<<","<<o.y<<","<<o.z<<std::endl;
-	std::cout<<pos0.x<<","<<pos0.y<<","<<pos0.z<<std::endl;
-#endif
 
 		// For some reason the position from GetPoseMatrix (which comes from WaitGetPoses)
 		// is incorrect, but the rotation is correct, while for GetPoseTransform it's the other way around.
@@ -486,6 +478,17 @@ namespace Lua::openvr {
 		}
 
 		return std::pair<umath::Transform, Vector3> {mpose, Vector3(pose.vVelocity.v[0], pose.vVelocity.v[1], pose.vVelocity.v[2]) * static_cast<float>(::util::pragma::metres_to_units(1.f))};
+	}
+
+	std::pair<umath::Transform, Vector3> get_pose(::openvr::Instance &instance, uint32_t deviceIdx)
+	{
+		auto [pose, vel] = get_raw_pose(instance, deviceIdx);
+
+		auto *invPose = instance.GetInverseDeviceZeroPose(deviceIdx);
+		if(invPose)
+			pose = *invPose * pose;
+
+		return {pose, vel};
 	}
 };
 
@@ -800,6 +803,9 @@ void Lua::openvr::register_lua_library(Lua::Interface &l)
 
 	modVr[luabind::def("get_pose_transform", &get_pose_transform)];
 	modVr[luabind::def("get_pose", &get_pose)];
+	modVr[luabind::def("get_raw_pose", &get_raw_pose)];
+	modVr[luabind::def("set_device_zero_pose", &::openvr::Instance::SetDeviceZeroPose)];
+	modVr[luabind::def("get_inverse_device_zero_pose", &::openvr::Instance::GetInverseDeviceZeroPose)];
 
 	std::unordered_map<std::string, lua_Integer> propErrorEnums {
 	  {"TRACKED_PROPERTY_ERROR_SUCCESS", static_cast<int32_t>(vr::ETrackedPropertyError::TrackedProp_Success)},
