@@ -22,6 +22,7 @@
 #include <pragma/c_engine.h>
 #include <luainterface.hpp>
 #include <sharedutils/functioncallback.h>
+#include <sharedutils/util_pragma.hpp>
 #include <pragma/pragma_module.hpp>
 #include <pragma/util/util_game.hpp>
 #include "vr_instance.hpp"
