@@ -29,8 +29,9 @@
 #include "vr_eye.hpp"
 #include "lopenvr.h"
 #include "wvmodule.h"
-#include <glm/gtx/matrix_decompose.hpp>
 #include <luabind/copy_policy.hpp>
+
+import glm;
 
 std::unique_ptr<openvr::Instance> s_vrInstance = nullptr;
 
@@ -293,7 +294,7 @@ namespace Lua::openvr {
 	{
 		auto vrMat = sys.GetProjectionMatrix(eye, nearZ, farZ);
 		auto m = glm::transpose(reinterpret_cast<Mat4 &>(vrMat.m));
-		return glm::scale(m, Vector3(1.f, -1.f, 1.f));
+		return glm::gtx::scale(m, Vector3(1.f, -1.f, 1.f));
 	}
 
 	std::tuple<float, float, float, float> get_projection_raw(vr::IVRSystem &sys, vr::EVREye eye)
@@ -440,8 +441,8 @@ namespace Lua::openvr {
 		::Vector4 perspective;
 		Vector3 pos;
 		Quat rot;
-		glm::decompose(poseMatrix, scale, rot, pos, skew, perspective);
-		rot = glm::conjugate(rot);
+		glm::gtx::decompose(poseMatrix, scale, rot, pos, skew, perspective);
+		rot = glm::gtx::conjugate(rot);
 
 		static auto openVrToPragmaPoseTransform = uquat::create(EulerAngles(0.f, 180.f, 0.f));
 		rot = rot * openVrToPragmaPoseTransform;
