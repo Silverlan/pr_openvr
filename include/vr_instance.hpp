@@ -63,6 +63,9 @@ namespace openvr {
 		vr::EDeviceActivityLevel GetTrackedDeviceActivityLevel(uint32_t deviceIdx) const;
 		std::optional<std::string> GetTrackedDeviceSerialNumber(uint32_t deviceIdx) const;
 		std::optional<std::string> GetTrackedDeviceType(uint32_t deviceIdx) const;
+		std::optional<std::string> GetTrackedDeviceTrackingSystemName(uint32_t deviceIdx) const;
+		std::optional<std::string> GetTrackedDeviceModelNumber(uint32_t deviceIdx) const;
+		std::optional<std::string> GetTrackedDeviceRenderModelName(uint32_t deviceIdx) const;
 
 		bool GetPoseTransform(uint32_t deviceIdx, vr::TrackedDevicePose_t &pose, Mat4 &m) const;
 		std::string GetTrackingSystemName(vr::TrackedPropertyError *peError = nullptr) const;

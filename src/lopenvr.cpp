@@ -624,6 +624,9 @@ void Lua::openvr::register_lua_library(Lua::Interface &l)
 	modVr[luabind::def("get_tracked_device_serial_number", &::openvr::Instance::GetTrackedDeviceSerialNumber)];
 	modVr[luabind::def("get_tracked_device_activity_level", &::openvr::Instance::GetTrackedDeviceActivityLevel)];
 	modVr[luabind::def("get_tracked_device_type", &::openvr::Instance::GetTrackedDeviceType)];
+	modVr[luabind::def("get_tracked_device_tracking_system_name", &::openvr::Instance::GetTrackedDeviceTrackingSystemName)];
+	modVr[luabind::def("get_tracked_device_model_number", &::openvr::Instance::GetTrackedDeviceModelNumber)];
+	modVr[luabind::def("get_tracked_device_render_model_name", &::openvr::Instance::GetTrackedDeviceRenderModelName)];
 	modVr[luabind::def("update_poses", &::openvr::Instance::UpdateHMDPoses)];
 	modVr[luabind::def("get_hmd_pose_matrix", &::openvr::Instance::GetHMDPoseMatrix, luabind::copy_policy<0> {})];
 	modVr[luabind::def(

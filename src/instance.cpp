@@ -912,6 +912,30 @@ std::optional<std::string> Instance::GetTrackedDeviceType(uint32_t deviceIdx) co
 		return {};
 	return serialNumber;
 }
+std::optional<std::string> Instance::GetTrackedDeviceTrackingSystemName(uint32_t deviceIdx) const
+{
+	vr::TrackedPropertyError err;
+	auto trackingSystem = GetTrackedDeviceString(deviceIdx, vr::ETrackedDeviceProperty::Prop_TrackingSystemName_String, &err);
+	if(err != vr::TrackedProp_Success)
+		return {};
+	return trackingSystem;
+}
+std::optional<std::string> Instance::GetTrackedDeviceModelNumber(uint32_t deviceIdx) const
+{
+	vr::TrackedPropertyError err;
+	auto modelNumber = GetTrackedDeviceString(deviceIdx, vr::ETrackedDeviceProperty::Prop_ModelNumber_String, &err);
+	if(err != vr::TrackedProp_Success)
+		return {};
+	return modelNumber;
+}
+std::optional<std::string> Instance::GetTrackedDeviceRenderModelName(uint32_t deviceIdx) const
+{
+	vr::TrackedPropertyError err;
+	auto renderModelName = GetTrackedDeviceString(deviceIdx, vr::ETrackedDeviceProperty::Prop_RenderModelName_String, &err);
+	if(err != vr::TrackedProp_Success)
+		return {};
+	return renderModelName;
+}
 bool Instance::GetPoseTransform(uint32_t deviceIdx, vr::TrackedDevicePose_t &pose, Mat4 &m) const
 {
 	float fSecondsSinceLastVsync;
