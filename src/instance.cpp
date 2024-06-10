@@ -626,7 +626,7 @@ std::string Instance::GetTrackedDeviceString(vr::TrackedDeviceIndex_t idx, vr::T
 		return "";
 	std::vector<char> r(unRequiredBufferLen);
 	unRequiredBufferLen = m_system->GetStringTrackedDeviceProperty(idx, prop, r.data(), unRequiredBufferLen, peError);
-	return std::string {r.data(), r.size()};
+	return std::string {r.data(), r.size() -1};
 }
 std::string Instance::GetTrackedDeviceString(vr::TrackedDeviceProperty prop, vr::TrackedPropertyError *peError) const { return GetTrackedDeviceString(vr::k_unTrackedDeviceIndex_Hmd, prop, peError); }
 bool Instance::GetTrackedDeviceBool(vr::TrackedDeviceProperty prop, vr::TrackedPropertyError *peError) const { return m_system->GetBoolTrackedDeviceProperty(vr::k_unTrackedDeviceIndex_Hmd, prop, peError); }
@@ -901,7 +901,6 @@ std::optional<std::string> Instance::GetTrackedDeviceSerialNumber(uint32_t devic
 	auto serialNumber = GetTrackedDeviceString(deviceIdx, vr::ETrackedDeviceProperty::Prop_SerialNumber_String, &err);
 	if(err != vr::TrackedProp_Success)
 		return {};
-	ustring::remove_whitespace(serialNumber);
 	return serialNumber;
 }
 std::optional<std::string> Instance::GetTrackedDeviceType(uint32_t deviceIdx) const
