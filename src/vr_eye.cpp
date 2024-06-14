@@ -74,5 +74,5 @@ Mat4 openvr::Eye::GetEyeProjectionMatrix(float nearZ, float farZ) const
 	float left, right, top, bottom;
 	vrInterface->GetProjectionRaw(m_eye, &left, &right, &top, &bottom);
 
-	return glm::frustumRH(left, right, bottom, top, nearZ, farZ);
+	return glm::gtx::frustumRH(left, right, bottom, top, nearZ, farZ);
 }
