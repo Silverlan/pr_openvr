@@ -17,6 +17,7 @@
 #include <prosper_fence.hpp>
 #include <prosper_command_buffer.hpp>
 #include <pragma/entities/entity_component_system_t.hpp>
+#include <glm/ext/matrix_clip_space.hpp>
 
 extern DLLCLIENT CEngine *c_engine;
 extern DLLCLIENT CGame *c_game;
