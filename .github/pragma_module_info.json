@@ -1,0 +1,6 @@
+{
+    "name": "Virtual Reality",
+    "module_name": "pr_openvr",
+    "install_directory": "addons/virtual_reality/modules/openvr/",
+    "release_directory": "addons/virtual_reality/"
+}
