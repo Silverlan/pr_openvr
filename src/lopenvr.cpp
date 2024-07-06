@@ -629,6 +629,13 @@ void Lua::openvr::register_lua_library(Lua::Interface &l)
 	modVr[luabind::def("get_tracked_device_model_number", &::openvr::Instance::GetTrackedDeviceModelNumber)];
 	modVr[luabind::def("get_tracked_device_render_model_name", &::openvr::Instance::GetTrackedDeviceRenderModelName)];
 	modVr[luabind::def("update_poses", &::openvr::Instance::UpdateHMDPoses)];
+	modVr[luabind::def(
+	  "get_pose_wait_time", +[]() {
+		  auto t = s_vrInstance->GetPoseWaitTime();
+		  auto ms = t.count() / 1'000'000.0;
+		  return ms;
+	  })];
+	modVr[luabind::def("get_smoothed_pose_wait_time", &::openvr::Instance::GetSmoothedPoseWaitTime)];
 	modVr[luabind::def("get_hmd_pose_matrix", &::openvr::Instance::GetHMDPoseMatrix, luabind::copy_policy<0> {})];
 	modVr[luabind::def(
 	  "get_hmd_pose", +[]() -> umath::Transform {

@@ -9,6 +9,7 @@
 #include <sharedutils/util_weak_handle.hpp>
 #include <unordered_map>
 #include <deque>
+#include <chrono>
 #include <optional>
 #include <mathutil/color.h>
 #include <mathutil/umat.h>
@@ -190,6 +191,8 @@ namespace openvr {
 		void SetTrackingSpace(vr::ETrackingUniverseOrigin space) const;
 
 		void UpdateHMDPoses();
+		std::chrono::steady_clock::duration GetPoseWaitTime() const;
+		double GetSmoothedPoseWaitTime() const;
 
 		void SetDeviceZeroPose(uint32_t deviceIndex, const umath::Transform &pose);
 		const umath::Transform *GetInverseDeviceZeroPose(uint32_t deviceIndex) const;
@@ -212,6 +215,8 @@ namespace openvr {
 		std::unordered_map<uint32_t, ControllerState> m_controllerStates;
 		std::array<Mat4, vr::k_unMaxTrackedDeviceCount> m_poseTransforms;
 		std::vector<vr::VREvent_t> m_events {};
+		std::chrono::steady_clock::duration m_poseWaitTime = std::chrono::nanoseconds {0};
+		double m_smoothedPoseWaitTime = 0.0;
 #ifdef USE_OPENGL_OFFSCREEN_CONTEXT
 		GLFWwindow *m_window;
 #endif

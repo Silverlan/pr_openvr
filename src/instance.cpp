@@ -569,12 +569,17 @@ const umath::Transform *Instance::GetInverseDeviceZeroPose(uint32_t deviceIndex)
 	return &m_invDeviceZeroPoses[deviceIndex];
 }
 
+std::chrono::steady_clock::duration Instance::GetPoseWaitTime() const { return m_poseWaitTime; }
+double Instance::GetSmoothedPoseWaitTime() const { return m_smoothedPoseWaitTime; }
+
 void Instance::UpdateHMDPoses()
 {
-	//auto t = std::chrono::high_resolution_clock::now();
+	auto t = std::chrono::steady_clock::now();
 	m_compositor->WaitGetPoses(m_trackedPoses.data(), m_trackedPoses.size(), nullptr, 0);
-	//auto tDelta = std::chrono::high_resolution_clock::now() -t;
-	//std::cout<<"Time passed: "<<(std::chrono::duration_cast<std::chrono::nanoseconds>(tDelta).count() /1'000'000.0)<<"ms"<<std::endl;
+	m_poseWaitTime = std::chrono::high_resolution_clock::now() - t;
+	constexpr float weightRatio = 0.8f;
+	auto poseWaitTimeMs = m_poseWaitTime.count() / 1'000'000.0;
+	m_smoothedPoseWaitTime = poseWaitTimeMs * (1.0 - weightRatio) + m_smoothedPoseWaitTime * weightRatio;
 
 	auto validPoseCount = 0;
 	auto nDevice = 0u;
@@ -626,7 +631,7 @@ std::string Instance::GetTrackedDeviceString(vr::TrackedDeviceIndex_t idx, vr::T
 		return "";
 	std::vector<char> r(unRequiredBufferLen);
 	unRequiredBufferLen = m_system->GetStringTrackedDeviceProperty(idx, prop, r.data(), unRequiredBufferLen, peError);
-	return std::string {r.data(), r.size() -1};
+	return std::string {r.data(), r.size() - 1};
 }
 std::string Instance::GetTrackedDeviceString(vr::TrackedDeviceProperty prop, vr::TrackedPropertyError *peError) const { return GetTrackedDeviceString(vr::k_unTrackedDeviceIndex_Hmd, prop, peError); }
 bool Instance::GetTrackedDeviceBool(vr::TrackedDeviceProperty prop, vr::TrackedPropertyError *peError) const { return m_system->GetBoolTrackedDeviceProperty(vr::k_unTrackedDeviceIndex_Hmd, prop, peError); }
