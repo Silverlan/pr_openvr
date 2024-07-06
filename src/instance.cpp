@@ -576,7 +576,7 @@ void Instance::UpdateHMDPoses()
 {
 	auto t = std::chrono::steady_clock::now();
 	m_compositor->WaitGetPoses(m_trackedPoses.data(), m_trackedPoses.size(), nullptr, 0);
-	m_poseWaitTime = std::chrono::high_resolution_clock::now() - t;
+	m_poseWaitTime = std::chrono::steady_clock::now() - t;
 	constexpr float weightRatio = 0.8f;
 	auto poseWaitTimeMs = m_poseWaitTime.count() / 1'000'000.0;
 	m_smoothedPoseWaitTime = poseWaitTimeMs * (1.0 - weightRatio) + m_smoothedPoseWaitTime * weightRatio;
