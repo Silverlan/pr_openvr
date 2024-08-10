@@ -1174,5 +1174,6 @@ void Lua::openvr::register_lua_library(Lua::Interface &l)
 	                                 .def_readonly("axis2", reinterpret_cast<Vector2 LuaVRControllerState::*>(&LuaVRControllerState::rAxis2))
 	                                 .def_readonly("axis3", reinterpret_cast<Vector2 LuaVRControllerState::*>(&LuaVRControllerState::rAxis3))
 	                                 .def_readonly("axis4", reinterpret_cast<Vector2 LuaVRControllerState::*>(&LuaVRControllerState::rAxis4));
+	classDefControllerState.add_static_constant("MAX_AXIS_COUNT", 5);
 	modVr[classDefControllerState];
 }
