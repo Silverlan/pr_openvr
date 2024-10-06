@@ -431,7 +431,7 @@ namespace Lua::openvr {
 		Mat4 m {};
 		if(instance.GetPoseTransform(deviceIdx, pose, m) == false)
 			return {};
-		return std::pair<Mat4, Vector3> {m, Vector3(pose.vVelocity.v[0], pose.vVelocity.v[1], pose.vVelocity.v[2]) * static_cast<float>(::util::pragma::metres_to_units(1.f))};
+		return std::pair<Mat4, Vector3> {m, Vector3(pose.vVelocity.v[0], pose.vVelocity.v[1], pose.vVelocity.v[2]) * static_cast<float>(pragma::metres_to_units(1.f))};
 	}
 
 	static umath::Transform openvr_matrix_to_pragma_pose(const Mat4 &poseMatrix)
@@ -446,7 +446,7 @@ namespace Lua::openvr {
 
 		static auto openVrToPragmaPoseTransform = uquat::create(EulerAngles(0.f, 180.f, 0.f));
 		rot = rot * openVrToPragmaPoseTransform;
-		pos *= static_cast<float>(::util::pragma::metres_to_units(1.f));
+		pos *= static_cast<float>(pragma::metres_to_units(1.f));
 		return umath::Transform {pos, rot};
 	}
 
@@ -470,7 +470,7 @@ namespace Lua::openvr {
 		if(s_vrInstance->GetPoseTransform(deviceIdx, pose2, m2)) {
 			auto &pos = mpose.GetOrigin();
 			pos = {m2[3][0], m2[3][1], m2[3][2]};
-			pos *= static_cast<float>(::util::pragma::metres_to_units(1.f));
+			pos *= static_cast<float>(pragma::metres_to_units(1.f));
 		}
 
 		static auto applyRotCorrection = true;
@@ -479,7 +479,7 @@ namespace Lua::openvr {
 			mpose.RotateGlobal(correctionRotation);
 		}
 
-		return std::pair<umath::Transform, Vector3> {mpose, Vector3(pose.vVelocity.v[0], pose.vVelocity.v[1], pose.vVelocity.v[2]) * static_cast<float>(::util::pragma::metres_to_units(1.f))};
+		return std::pair<umath::Transform, Vector3> {mpose, Vector3(pose.vVelocity.v[0], pose.vVelocity.v[1], pose.vVelocity.v[2]) * static_cast<float>(pragma::metres_to_units(1.f))};
 	}
 
 	std::pair<umath::Transform, Vector3> get_pose(::openvr::Instance &instance, uint32_t deviceIdx)
