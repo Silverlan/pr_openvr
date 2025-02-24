@@ -3,8 +3,8 @@
 #include <mathutil/umath.h>
 
 #include <iostream>
-void openvr::ControllerState::SetStateChangeCallback(const std::function<void(uint32_t, GLFW::KeyState)> &f) { m_stateChangeCallback = f; }
-void openvr::ControllerState::OnStateChanged(uint32_t key, GLFW::KeyState state)
+void openvr::ControllerState::SetStateChangeCallback(const std::function<void(uint32_t, pragma::platform::KeyState)> &f) { m_stateChangeCallback = f; }
+void openvr::ControllerState::OnStateChanged(uint32_t key, pragma::platform::KeyState state)
 {
 	if(m_stateChangeCallback == nullptr)
 		return;
@@ -17,10 +17,10 @@ void openvr::ControllerState::UpdateState(const vr::VRControllerState_t &state)
 		while(v > 0) {
 			if(state.ulButtonPressed & v) {
 				if(!(m_vrState.ulButtonPressed & v))
-					OnStateChanged(umath::get_number_of_times_dividable_by_x(v, 2), GLFW::KeyState::Press);
+					OnStateChanged(umath::get_number_of_times_dividable_by_x(v, 2), pragma::platform::KeyState::Press);
 			}
 			else if(m_vrState.ulButtonPressed & v)
-				OnStateChanged(umath::get_number_of_times_dividable_by_x(v, 2), GLFW::KeyState::Release);
+				OnStateChanged(umath::get_number_of_times_dividable_by_x(v, 2), pragma::platform::KeyState::Release);
 			v >>= 1u;
 		}
 	}

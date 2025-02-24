@@ -528,13 +528,13 @@ const std::vector<vr::VREvent_t> &Instance::PollEvents()
 	}
 	return m_events;
 }
-void Instance::OnControllerStateChanged(uint32_t controllerId, uint32_t key, GLFW::KeyState state)
+void Instance::OnControllerStateChanged(uint32_t controllerId, uint32_t key, pragma::platform::KeyState state)
 {
 	if(m_controllerStateCallback == nullptr)
 		return;
 	m_controllerStateCallback(controllerId, key, state);
 }
-void Instance::SetControllerStateCallback(const std::function<void(uint32_t, uint32_t, GLFW::KeyState)> &callback) { m_controllerStateCallback = callback; }
+void Instance::SetControllerStateCallback(const std::function<void(uint32_t, uint32_t, pragma::platform::KeyState)> &callback) { m_controllerStateCallback = callback; }
 /*bool Instance::InitializeScene()
 {
 	auto &context = IState::get_render_context();

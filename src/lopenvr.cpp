@@ -160,7 +160,7 @@ PRAGMA_EXPORT void openvr_set_hmd_view_enabled(bool b)
 		return;
 	s_vrInstance->SetHmdViewEnabled(b);
 }
-PRAGMA_EXPORT void openvr_set_controller_state_callback(const std::function<void(uint32_t, uint32_t, GLFW::KeyState)> &f)
+PRAGMA_EXPORT void openvr_set_controller_state_callback(const std::function<void(uint32_t, uint32_t, pragma::platform::KeyState)> &f)
 {
 	if(s_vrInstance == nullptr)
 		return;
@@ -203,7 +203,7 @@ PRAGMA_EXPORT bool openvr_initialize(std::string &strErr, std::vector<std::strin
 
 int run_openxr_demo(int argc, char *argv[]);
 #include <prosper_window.hpp>
-GLFW::Window *get_glfw_window() { return &*pragma::get_cengine()->GetRenderContext().GetWindow(); }
+pragma::platform::Window *get_glfw_window() { return &*pragma::get_cengine()->GetRenderContext().GetWindow(); }
 
 //#include "openxr/pvr_openxr_instance.hpp"
 

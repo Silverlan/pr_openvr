@@ -1,7 +1,6 @@
 #ifndef __VR_INSTANCE_HPP__
 #define __VR_INSTANCE_HPP__
 
-#include <iglfw/glfw.h>
 #include <openvr.h>
 #include <string>
 #include <cinttypes>
@@ -16,6 +15,8 @@
 #include <mathutil/uvec.h>
 #include <mathutil/transform.hpp>
 #include "vr_eye.hpp"
+
+import pragma.platform;
 
 struct lua_State;
 namespace Lua {
@@ -52,7 +53,7 @@ namespace openvr {
 		Eye &GetRightEye();
 		const Eye &GetRightEye() const;
 
-		void SetControllerStateCallback(const std::function<void(uint32_t, uint32_t, GLFW::KeyState)> &callback);
+		void SetControllerStateCallback(const std::function<void(uint32_t, uint32_t, pragma::platform::KeyState)> &callback);
 		std::string GetTrackedDeviceString(vr::TrackedDeviceIndex_t idx, vr::TrackedDeviceProperty prop, vr::TrackedPropertyError *peError = nullptr) const;
 		std::string GetTrackedDeviceString(vr::TrackedDeviceProperty prop, vr::TrackedPropertyError *peError = nullptr) const;
 		bool GetTrackedDeviceBool(vr::TrackedDeviceProperty prop, vr::TrackedPropertyError *peError = nullptr) const;
@@ -226,12 +227,12 @@ namespace openvr {
 		std::unique_ptr<Eye> m_leftEye;
 		std::unique_ptr<Eye> m_rightEye;
 		std::vector<umath::Transform> m_invDeviceZeroPoses;
-		std::function<void(uint32_t, uint32_t, GLFW::KeyState)> m_controllerStateCallback = nullptr;
+		std::function<void(uint32_t, uint32_t, pragma::platform::KeyState)> m_controllerStateCallback = nullptr;
 		bool m_bHmdViewEnabled = false;
 		mutable bool m_isRenderingSuspended = false;
 		RenderAPI m_renderAPI = RenderAPI::OpenGL;
 
-		void OnControllerStateChanged(uint32_t controllerId, uint32_t key, GLFW::KeyState state);
+		void OnControllerStateChanged(uint32_t controllerId, uint32_t key, pragma::platform::KeyState state);
 		vr::EVRCompositorError SetSkyboxOverride(const std::vector<prosper::IImage *> &images) const;
 	};
 };
