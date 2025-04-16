@@ -6,12 +6,10 @@
 #include <pragma/lua/classes/ldef_color.h>
 #include <sharedutils/datastream.h>
 #include <pragma/lua/libraries/c_lua_vulkan.h>
-#include <pragma/lua/lua_entity_component.hpp>
 #include <pragma/audio/e_alstate.h>
 #include <pragma/game/c_game.h>
 #include <pragma/physics/physobj.h>
 #include <pragma/physics/collision_object.hpp>
-#include <pragma/lua/c_lentity_handles.hpp>
 #include <pragma/lua/converters/game_type_converters_t.hpp>
 #include <pragma/lua/converters/optional_converter_t.hpp>
 #include <pragma/lua/converters/pair_converter_t.hpp>
