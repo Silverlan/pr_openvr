@@ -46,4 +46,13 @@ else()
     target_link_libraries(${PROJ_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/third_party/openvr/lib/linux64/libopenvr_api.so")
 endif()
 
+set_property(TARGET ${PROJ_NAME}
+  APPEND PROPERTY INSTALL_RPATH
+    "$ORIGIN:$ORIGIN/../../../../lib"
+)
+set_property(TARGET ${PROJ_NAME}
+  APPEND PROPERTY INSTALL_RPATH
+    "$ORIGIN/addons/virtual_reality/modules/openvr"
+)
+
 pr_finalize(${PROJ_NAME} FOLDER "${IDE_FOLDER}")
