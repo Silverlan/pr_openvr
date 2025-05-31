@@ -22,6 +22,10 @@
 #include <iostream>
 #endif
 
+#ifdef __linux__
+import pragma.gamemount;
+#endif
+
 extern DLLCLIENT CEngine *c_engine;
 extern DLLCLIENT CGame *c_game;
 
@@ -442,6 +446,35 @@ void OpenVrInitializer::Initialize(bool wait)
 {
 	if(m_state == State::Initial) {
 		m_state = State::Initializing;
+
+#ifdef __linux__
+		// If the application was not launched through steam, and SteamVR is not already running,
+		// initializing SteamVR will fail because it's unable to find the qt binaries.
+		// As a workaround, we try to find the steam installation location and add the binary path
+		// to the path lookup env variable.
+		// (Alternatively the application can be added as a non-steam game in Steam and then started through steam.)
+		auto curLibPath = util::get_env_variable("LD_LIBRARY_PATH");
+		if(curLibPath.has_value()) {
+			auto &steamPaths = pragma::gamemount::get_steam_root_paths();
+			std::unordered_map<std::string, bool> libPaths {
+				{"steamapps/common/SteamVR/bin/linux64/qt/lib", false},
+				{"steamapps/common/SteamVR/bin/linux64", false}
+			};
+			for(auto &steamPath : steamPaths) {
+				for(auto &[relLibPath, b] : libPaths) {
+					if(b)
+						continue;
+					auto libPath = util::DirPath(steamPath, relLibPath);
+					if(filemanager::exists(libPath.GetString())) {
+						auto newLibPath = *curLibPath + ":" +libPath.GetString();
+						util::set_env_variable("LD_LIBRARY_PATH", newLibPath);
+						b = true;
+					}
+				}
+			}
+		}
+#endif
+
 		m_thread = std::thread {[this]() {
 			m_ivrSystem = vr::VR_Init(&m_error, vr::EVRApplicationType::VRApplication_Scene);
 			m_state = State::InitializationComplete;
