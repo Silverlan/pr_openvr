@@ -17,6 +17,7 @@
 #include <pragma/iscene.h>
 #include <pragma/game/c_game.h>
 #include <pragma/entities/environment/c_env_camera.h>
+#include <pragma/util/steam/util_steam.hpp>
 #include <sharedutils/util_string.h>
 #ifdef _DEBUG
 #include <iostream>
@@ -455,7 +456,7 @@ void OpenVrInitializer::Initialize(bool wait)
 		// (Alternatively the application can be added as a non-steam game in Steam and then started through steam.)
 		auto curLibPath = util::get_env_variable("LD_LIBRARY_PATH");
 		if(curLibPath.has_value()) {
-			auto &steamPaths = pragma::gamemount::get_steam_root_paths();
+			auto steamPaths = util::steam::find_steam_root_paths();
 			std::unordered_map<std::string, bool> libPaths {
 				{"steamapps/common/SteamVR/bin/linux64/qt/lib", false},
 				{"steamapps/common/SteamVR/bin/linux64", false}
