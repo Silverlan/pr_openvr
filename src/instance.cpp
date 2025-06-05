@@ -23,10 +23,6 @@
 #include <iostream>
 #endif
 
-#ifdef __linux__
-import pragma.gamemount;
-#endif
-
 extern DLLCLIENT CEngine *c_engine;
 extern DLLCLIENT CGame *c_game;
 
