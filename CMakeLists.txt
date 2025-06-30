@@ -39,12 +39,9 @@ if("${OPENVR_ARCH}" STREQUAL "")
     return()
 endif()
 
-target_include_directories(${PROJ_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/third_party/openvr/headers/")
-if(WIN32)
-    target_link_libraries(${PROJ_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/third_party/openvr/lib/win64/openvr_api.lib")
-else()
-    target_link_libraries(${PROJ_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/third_party/openvr/lib/linux64/libopenvr_api.so")
-endif()
+find_package(openvr REQUIRED)
+
+pr_add_external_dependency(${PROJ_NAME} openvr LIBRARY PRIVATE)
 
 if(UNIX)
     set_property(TARGET ${PROJ_NAME}
