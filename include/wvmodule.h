@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: (c) 2020 Silverlan <opensource@pragma-engine.com>
+// SPDX-License-Identifier: MIT
+
 #ifndef __WVMODULE_H__
 #define __WVMODULE_H__
 

@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: (c) 2020 Silverlan <opensource@pragma-engine.com>
+// SPDX-License-Identifier: MIT
+
 #ifndef __VR_EYE_HPP__
 #define __VR_EYE_HPP__
 

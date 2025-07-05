@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: (c) 2020 Silverlan <opensource@pragma-engine.com>
+// SPDX-License-Identifier: MIT
+
 #include <prosper_command_buffer.hpp>
 #include <prosper_fence.hpp>
 #include "stdafx_openvr.h"
