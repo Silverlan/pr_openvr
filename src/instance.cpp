@@ -17,7 +17,6 @@
 #include <shader/prosper_shader.hpp>
 #include <prosper_util.hpp>
 #include <pragma/c_engine.h>
-#include <pragma/iscene.h>
 #include <pragma/game/c_game.h>
 #include <pragma/entities/environment/c_env_camera.h>
 #include <pragma/util/steam/util_steam.hpp>
@@ -25,6 +24,8 @@
 #ifdef _DEBUG
 #include <iostream>
 #endif
+
+import pragma.iclient;
 
 extern DLLCLIENT CEngine *c_engine;
 extern DLLCLIENT CGame *c_game;

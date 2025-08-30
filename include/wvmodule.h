@@ -11,7 +11,6 @@
 #define IState iserver
 #pragma comment(lib, "IServer.lib")
 #else
-#include "pragma/iclient.h"
 #define IState iclient
 #pragma comment(lib, "IClient.lib")
 #endif

@@ -6,7 +6,6 @@
 
 #include <openvr.h>
 #include <mathutil/umat.h>
-#include <pragma/iscene.h>
 #include <sharedutils/util_weak_handle.hpp>
 #include <optional>
 
