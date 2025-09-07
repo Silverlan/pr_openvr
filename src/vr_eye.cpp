@@ -9,7 +9,6 @@
 #include <pragma/game/c_game.h>
 #include <pragma/entities/environment/c_env_camera.h>
 #include <pragma/entities/entity_iterator.hpp>
-#include <pragma/entities/components/c_light_map_component.hpp>
 #include <pragma/entities/c_world.h>
 #include <prosper_context.hpp>
 #include <image/prosper_image.hpp>
