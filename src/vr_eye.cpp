@@ -20,9 +20,6 @@
 #include <pragma/entities/entity_component_system_t.hpp>
 #include <glm/ext/matrix_clip_space.hpp>
 
-extern DLLCLIENT CEngine *c_engine;
-extern DLLCLIENT CGame *c_game;
-
 openvr::Eye::Eye(Instance &instance, vr::EVREye eye) : m_eye {eye}, m_instance {instance} {}
 
 openvr::Eye::~Eye() {}
@@ -34,7 +31,7 @@ void openvr::Eye::SetImage(prosper::IImage &img)
 	switch(m_instance.GetRenderAPI()) {
 	case RenderAPI::Vulkan:
 		{
-			auto &renderContext = c_engine->GetRenderContext();
+			auto &renderContext = pragma::get_cengine()->GetRenderContext();
 			auto &vrTextureData = (m_vrVkTextureData = vr::VRVulkanTextureData_t {});
 			openvr::initialize_vulkan_texture_data(*vrTextureData, img);
 			m_vrTexture = {&vrTextureData /* handle */, vr::TextureType_Vulkan, vr::EColorSpace::ColorSpace_Auto};

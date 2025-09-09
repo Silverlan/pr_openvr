@@ -27,9 +27,6 @@
 
 import pragma.iclient;
 
-extern DLLCLIENT CEngine *c_engine;
-extern DLLCLIENT CGame *c_game;
-
 using namespace openvr;
 
 std::string openvr::to_string(uint32_t ev)
@@ -495,7 +492,7 @@ OpenVrInitializer::~OpenVrInitializer()
 
 void openvr::initialize_vulkan_texture_data(vr::VRVulkanTextureData_t &vrTextureData, prosper::IImage &img)
 {
-	auto &renderContext = c_engine->GetRenderContext();
+	auto &renderContext = pragma::get_cengine()->GetRenderContext();
 	vrTextureData.m_nImage = reinterpret_cast<uint64_t>(img.GetInternalHandle());
 	vrTextureData.m_pDevice = static_cast<VkDevice_T *>(renderContext.GetInternalDevice());
 	vrTextureData.m_pPhysicalDevice = static_cast<VkPhysicalDevice_T *>(renderContext.GetInternalPhysicalDevice());
@@ -703,7 +700,7 @@ std::unique_ptr<Instance> Instance::Create(vr::EVRInitError *err, std::vector<st
 		return nullptr;
 	}
 
-	auto renderAPI = c_engine->GetRenderContext().GetAPIIdentifier();
+	auto renderAPI = pragma::get_cengine()->GetRenderContext().GetAPIIdentifier();
 	RenderAPI eRenderAPI;
 	if(ustring::compare<std::string>(renderAPI, "OpenGL"))
 		eRenderAPI = RenderAPI::OpenGL;
@@ -896,7 +893,7 @@ vr::EVRCompositorError Instance::SetSkyboxOverride(const std::vector<prosper::II
 		}
 	}
 
-	auto renderAPI = c_engine->GetRenderContext().GetAPIIdentifier();
+	auto renderAPI = pragma::get_cengine()->GetRenderContext().GetAPIIdentifier();
 	std::vector<vr::Texture_t> imgTexData(images.size());
 	for(auto i = decltype(images.size()) {0}; i < images.size(); ++i) {
 		auto &img = images.at(i);
