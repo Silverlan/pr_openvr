@@ -5,11 +5,7 @@
 #include "vr_eye.hpp"
 #include "vr_instance.hpp"
 #include "wvmodule.h"
-#include <pragma/c_engine.h>
-#include <pragma/game/c_game.h>
-#include <pragma/entities/environment/c_env_camera.h>
 #include <pragma/entities/entity_iterator.hpp>
-#include <pragma/entities/c_world.h>
 #include <prosper_context.hpp>
 #include <image/prosper_image.hpp>
 #include <prosper_util.hpp>
@@ -19,6 +15,8 @@
 #include <prosper_command_buffer.hpp>
 #include <pragma/entities/entity_component_system_t.hpp>
 #include <glm/ext/matrix_clip_space.hpp>
+
+import pragma.client;
 
 openvr::Eye::Eye(Instance &instance, vr::EVREye eye) : m_eye {eye}, m_instance {instance} {}
 

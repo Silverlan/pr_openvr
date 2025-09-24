@@ -4,13 +4,13 @@
 #include <prosper_command_buffer.hpp>
 #include <prosper_fence.hpp>
 #include "stdafx_openvr.h"
+#include "pragma/engine.h"
+#include <prosper_window.hpp>
 #include <optional>
 #include <unordered_map>
 #include <pragma/lua/classes/ldef_color.h>
 #include <sharedutils/datastream.h>
-#include <pragma/lua/libraries/c_lua_vulkan.h>
 #include <pragma/audio/e_alstate.h>
-#include <pragma/game/c_game.h>
 #include <pragma/physics/physobj.h>
 #include <pragma/physics/collision_object.hpp>
 #include <pragma/lua/converters/game_type_converters_t.hpp>
@@ -18,9 +18,6 @@
 #include <pragma/lua/converters/pair_converter_t.hpp>
 #include <pragma/lua/converters/vector_converter_t.hpp>
 #include <pragma/lua/policies/default_parameter_policy.hpp>
-#include <pragma/entities/environment/c_env_camera.h>
-#include <pragma/entities/components/c_scene_component.hpp>
-#include <pragma/c_engine.h>
 #include <luainterface.hpp>
 #include <sharedutils/functioncallback.h>
 #include <sharedutils/util_pragma.hpp>
@@ -33,6 +30,8 @@
 #include <luabind/copy_policy.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
+
+import pragma.client;
 
 std::unique_ptr<openvr::Instance> s_vrInstance = nullptr;
 
@@ -203,7 +202,7 @@ PRAGMA_EXPORT bool openvr_initialize(std::string &strErr, std::vector<std::strin
 };
 
 int run_openxr_demo(int argc, char *argv[]);
-#include <prosper_window.hpp>
+
 pragma::platform::Window *get_glfw_window() { return &*pragma::get_cengine()->GetRenderContext().GetWindow(); }
 
 //#include "openxr/pvr_openxr_instance.hpp"
