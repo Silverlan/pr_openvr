@@ -7,7 +7,6 @@
 #include "vr_instance.hpp"
 #include <sharedutils/functioncallback.h>
 #include <luainterface.hpp>
-#include <pragma/pragma_module.hpp>
 #ifdef _DEBUG
 #include <iostream>
 #endif

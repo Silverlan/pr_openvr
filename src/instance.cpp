@@ -8,7 +8,6 @@
 #include "wvmodule.h"
 #include "vrincludes.h"
 #include <sharedutils/util.h>
-#include "pragma/console/conout.h"
 #include <sharedutils/scope_guard.h>
 #include <array>
 #include <GLFW/glfw3.h>
@@ -18,7 +17,6 @@
 #include <prosper_fence.hpp>
 #include <shader/prosper_shader.hpp>
 #include <prosper_util.hpp>
-#include <pragma/util/steam/util_steam.hpp>
 #include <sharedutils/util_string.h>
 #ifdef _DEBUG
 #include <iostream>

@@ -5,7 +5,6 @@
 #include "vr_eye.hpp"
 #include "vr_instance.hpp"
 #include "wvmodule.h"
-#include <pragma/entities/entity_iterator.hpp>
 #include <prosper_context.hpp>
 #include <image/prosper_image.hpp>
 #include <prosper_util.hpp>
@@ -13,7 +12,6 @@
 #include <image/prosper_render_target.hpp>
 #include <prosper_fence.hpp>
 #include <prosper_command_buffer.hpp>
-#include <pragma/entities/entity_component_system_t.hpp>
 #include <glm/ext/matrix_clip_space.hpp>
 
 import pragma.client;

@@ -7,7 +7,6 @@
 #define LOPENVR_VERBOSE 0
 
 #ifdef MODULE_SERVER
-#include "pragma/iserver.h"
 #define IState iserver
 #pragma comment(lib, "IServer.lib")
 #else
