@@ -1,19 +1,13 @@
 // SPDX-FileCopyrightText: (c) 2020 Silverlan <opensource@pragma-engine.com>
 // SPDX-License-Identifier: MIT
 
-#include "stdafx_openvr.h"
-#include "vr_eye.hpp"
-#include "vr_instance.hpp"
-#include "wvmodule.h"
-#include <prosper_context.hpp>
-#include <image/prosper_image.hpp>
-#include <prosper_util.hpp>
-#include <image/prosper_sampler.hpp>
-#include <image/prosper_render_target.hpp>
-#include <prosper_fence.hpp>
-#include <prosper_command_buffer.hpp>
-#include <glm/ext/matrix_clip_space.hpp>
+module;
 
+#include <openvr.h>
+
+module pragma.modules.openvr;
+
+import :controller_state;
 import pragma.client;
 
 openvr::Eye::Eye(Instance &instance, vr::EVREye eye) : m_eye {eye}, m_instance {instance} {}
@@ -69,5 +63,5 @@ Mat4 openvr::Eye::GetEyeProjectionMatrix(float nearZ, float farZ) const
 	float left, right, top, bottom;
 	vrInterface->GetProjectionRaw(m_eye, &left, &right, &top, &bottom);
 
-	return glm::frustumRH(left, right, bottom, top, nearZ, farZ);
+	return glm::gtx::frustumRH(left, right, bottom, top, nearZ, farZ);
 }

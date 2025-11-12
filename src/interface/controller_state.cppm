@@ -1,15 +1,15 @@
 // SPDX-FileCopyrightText: (c) 2020 Silverlan <opensource@pragma-engine.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef __VR_CONTROLLER_STATE_HPP__
-#define __VR_CONTROLLER_STATE_HPP__
+module;
 
-#include <functional>
 #include <openvr.h>
+
+export module pragma.modules.openvr:controller_state;
 
 import pragma.platform;
 
-namespace openvr {
+export namespace openvr {
 	struct ControllerState {
 		ControllerState() = default;
 		void UpdateState(const vr::VRControllerState_t &state);
@@ -20,5 +20,3 @@ namespace openvr {
 		std::function<void(uint32_t, pragma::platform::KeyState)> m_stateChangeCallback = nullptr;
 	};
 };
-
-#endif

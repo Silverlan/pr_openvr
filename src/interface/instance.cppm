@@ -1,38 +1,16 @@
 // SPDX-FileCopyrightText: (c) 2020 Silverlan <opensource@pragma-engine.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef __VR_INSTANCE_HPP__
-#define __VR_INSTANCE_HPP__
+module;
 
 #include <openvr.h>
-#include <string>
-#include <cinttypes>
-#include <sharedutils/functioncallback.h>
-#include <sharedutils/util_weak_handle.hpp>
-#include <unordered_map>
-#include <deque>
-#include <chrono>
-#include <optional>
-#include <mathutil/color.h>
-#include <mathutil/umat.h>
-#include <mathutil/uvec.h>
-#include <mathutil/transform.hpp>
-#include "vr_eye.hpp"
 
-import pragma.platform;
+export module pragma.modules.openvr:instance;
 
-struct lua_State;
-namespace Lua {
-	class Interface;
-};
-namespace prosper {
-	class Shader;
-	class IImage;
-	class IPrimaryCommandBuffer;
-	class IFence;
-};
+export import pragma.platform;
+export import pragma.prosper;
 
-namespace openvr {
+export namespace openvr {
 	enum class RenderAPI : uint8_t { OpenGL = 0, Vulkan };
 	struct ControllerState;
 	struct Eye;
@@ -239,5 +217,3 @@ namespace openvr {
 		vr::EVRCompositorError SetSkyboxOverride(const std::vector<prosper::IImage *> &images) const;
 	};
 };
-
-#endif
