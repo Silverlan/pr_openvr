@@ -1,11 +1,14 @@
 // SPDX-FileCopyrightText: (c) 2020 Silverlan <opensource@pragma-engine.com>
 // SPDX-License-Identifier: MIT
 
-#include "stdafx_openvr.h"
-#include "vr_controller_state.hpp"
-#include <mathutil/umath.h>
+module;
 
-#include <iostream>
+#include <openvr.h>
+
+module pragma.modules.openvr;
+
+import :controller_state;
+
 void openvr::ControllerState::SetStateChangeCallback(const std::function<void(uint32_t, pragma::platform::KeyState)> &f) { m_stateChangeCallback = f; }
 void openvr::ControllerState::OnStateChanged(uint32_t key, pragma::platform::KeyState state)
 {

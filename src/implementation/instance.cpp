@@ -1,33 +1,15 @@
 // SPDX-FileCopyrightText: (c) 2020 Silverlan <opensource@pragma-engine.com>
 // SPDX-License-Identifier: MIT
 
-#include "stdafx_openvr.h"
-#include "vr_instance.hpp"
-#include "vr_eye.hpp"
-#include "vr_controller_state.hpp"
-#include "wvmodule.h"
-#include "vrincludes.h"
-#include <sharedutils/scope_guard.h>
-#include <array>
-#include <GLFW/glfw3.h>
-#include <image/prosper_render_target.hpp>
-#include <prosper_context.hpp>
-#include <prosper_command_buffer.hpp>
-#include <prosper_fence.hpp>
-#include <shader/prosper_shader.hpp>
-#include <prosper_util.hpp>
-#include <pragma/c_engine.h>
-#include <pragma/iscene.h>
-#include <pragma/game/c_game.h>
-#include <pragma/entities/environment/c_env_camera.h>
-#include <pragma/util/steam/util_steam.hpp>
-#include <sharedutils/util_string.h>
-#ifdef _DEBUG
-#include <iostream>
-#endif
+module;
 
-extern DLLCLIENT CEngine *c_engine;
-extern DLLCLIENT CGame *c_game;
+#include <openvr.h>
+
+module pragma.modules.openvr;
+
+import :controller_state;
+import pragma.client;
+import pragma.iclient;
 
 using namespace openvr;
 
@@ -456,17 +438,14 @@ void OpenVrInitializer::Initialize(bool wait)
 		auto curLibPath = util::get_env_variable("LD_LIBRARY_PATH");
 		if(curLibPath.has_value()) {
 			auto steamPaths = util::steam::find_steam_root_paths();
-			std::unordered_map<std::string, bool> libPaths {
-				{"steamapps/common/SteamVR/bin/linux64/qt/lib", false},
-				{"steamapps/common/SteamVR/bin/linux64", false}
-			};
+			std::unordered_map<std::string, bool> libPaths {{"steamapps/common/SteamVR/bin/linux64/qt/lib", false}, {"steamapps/common/SteamVR/bin/linux64", false}};
 			for(auto &steamPath : steamPaths) {
 				for(auto &[relLibPath, b] : libPaths) {
 					if(b)
 						continue;
 					auto libPath = util::DirPath(steamPath, relLibPath);
 					if(filemanager::exists(libPath.GetString())) {
-						auto newLibPath = *curLibPath + ":" +libPath.GetString();
+						auto newLibPath = *curLibPath + ":" + libPath.GetString();
 						util::set_env_variable("LD_LIBRARY_PATH", newLibPath);
 						b = true;
 					}
@@ -494,7 +473,7 @@ OpenVrInitializer::~OpenVrInitializer()
 
 void openvr::initialize_vulkan_texture_data(vr::VRVulkanTextureData_t &vrTextureData, prosper::IImage &img)
 {
-	auto &renderContext = c_engine->GetRenderContext();
+	auto &renderContext = pragma::get_cengine()->GetRenderContext();
 	vrTextureData.m_nImage = reinterpret_cast<uint64_t>(img.GetInternalHandle());
 	vrTextureData.m_pDevice = static_cast<VkDevice_T *>(renderContext.GetInternalDevice());
 	vrTextureData.m_pPhysicalDevice = static_cast<VkPhysicalDevice_T *>(renderContext.GetInternalPhysicalDevice());
@@ -533,7 +512,7 @@ Instance::Instance(vr::IVRSystem *system, RenderAPI renderAPI, vr::IVRRenderMode
 {
 	m_leftEye = std::make_unique<Eye>(*this, vr::EVREye::Eye_Left);
 	m_rightEye = std::make_unique<Eye>(*this, vr::EVREye::Eye_Right);
-	auto *shaderFlip = IState::get_shader("screen_flip_y");
+	auto *shaderFlip = iclient::get_shader("screen_flip_y");
 	m_hShaderFlip = (shaderFlip != nullptr) ? shaderFlip->GetHandle() : util::WeakHandle<prosper::Shader> {};
 #ifdef _DEBUG
 	m_compositor->ShowMirrorWindow();
@@ -570,7 +549,7 @@ void Instance::OnControllerStateChanged(uint32_t controllerId, uint32_t key, pra
 void Instance::SetControllerStateCallback(const std::function<void(uint32_t, uint32_t, pragma::platform::KeyState)> &callback) { m_controllerStateCallback = callback; }
 /*bool Instance::InitializeScene()
 {
-	auto &context = IState::get_render_context();
+	auto &context = iclient::get_render_context();
 #if LOPENVR_VERBOSE == 1
 		std::cout<<"[VR] Initializing eyes..."<<std::endl;
 #endif
@@ -702,7 +681,7 @@ std::unique_ptr<Instance> Instance::Create(vr::EVRInitError *err, std::vector<st
 		return nullptr;
 	}
 
-	auto renderAPI = c_engine->GetRenderContext().GetAPIIdentifier();
+	auto renderAPI = pragma::get_cengine()->GetRenderContext().GetAPIIdentifier();
 	RenderAPI eRenderAPI;
 	if(ustring::compare<std::string>(renderAPI, "OpenGL"))
 		eRenderAPI = RenderAPI::OpenGL;
@@ -718,7 +697,7 @@ std::unique_ptr<Instance> Instance::Create(vr::EVRInitError *err, std::vector<st
 			instanceExt.resize(instanceExtLen);
 			pCompositor->GetVulkanInstanceExtensionsRequired(const_cast<char *>(instanceExt.data()), 0);
 		}
-		auto &vkContext = IState::get_render_context();
+		auto &vkContext = iclient::get_render_context();
 		auto *vkDevice = static_cast<VkPhysicalDevice_T *>(vkContext.GetInternalPhysicalDevice());
 		auto deviceExtLen = pCompositor->GetVulkanDeviceExtensionsRequired(vkDevice, nullptr, 0);
 		std::string deviceExt;
@@ -895,7 +874,7 @@ vr::EVRCompositorError Instance::SetSkyboxOverride(const std::vector<prosper::II
 		}
 	}
 
-	auto renderAPI = c_engine->GetRenderContext().GetAPIIdentifier();
+	auto renderAPI = pragma::get_cengine()->GetRenderContext().GetAPIIdentifier();
 	std::vector<vr::Texture_t> imgTexData(images.size());
 	for(auto i = decltype(images.size()) {0}; i < images.size(); ++i) {
 		auto &img = images.at(i);

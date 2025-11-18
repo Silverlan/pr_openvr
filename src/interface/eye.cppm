@@ -1,28 +1,15 @@
 // SPDX-FileCopyrightText: (c) 2020 Silverlan <opensource@pragma-engine.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef __VR_EYE_HPP__
-#define __VR_EYE_HPP__
+module;
 
 #include <openvr.h>
-#include <mathutil/umat.h>
-#include <pragma/iscene.h>
-#include <sharedutils/util_weak_handle.hpp>
-#include <optional>
 
-namespace prosper {
-	class RenderTarget;
-	class IImage;
-	class IPrimaryCommandBuffer;
-	class IFence;
-};
-namespace pragma {
-	class CCameraComponent;
-	namespace rendering {
-		class BaseRenderer;
-	};
-};
-namespace openvr {
+export module pragma.modules.openvr:eye;
+
+export import pragma.client;
+
+export namespace openvr {
 	class Instance;
 	struct Eye {
 	  public:
@@ -42,9 +29,6 @@ namespace openvr {
 		vr::Texture_t m_vrTexture;
 
 		vr::EVREye m_eye;
-		std::shared_ptr<pragma::rendering::BaseRenderer> m_renderer = nullptr;
 		util::WeakHandle<pragma::CCameraComponent> m_camera {};
 	};
 };
-
-#endif

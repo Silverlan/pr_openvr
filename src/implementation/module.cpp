@@ -1,31 +1,22 @@
 // SPDX-FileCopyrightText: (c) 2020 Silverlan <opensource@pragma-engine.com>
 // SPDX-License-Identifier: MIT
 
-#include "stdafx_openvr.h"
-#include "wvmodule.h"
-#include "lopenvr.h"
-#include "vr_instance.hpp"
-#include <sharedutils/functioncallback.h>
-#include <luainterface.hpp>
-#include <pragma/pragma_module.hpp>
-#ifdef _DEBUG
-#include <iostream>
-#endif
+module pragma.modules.openvr;
 
-class Game;
-class CGame;
+import :controller_state;
+
 extern "C" {
-void PRAGMA_EXPORT pragma_initialize_lua(Lua::Interface &l)
+void PR_EXPORT pragma_initialize_lua(Lua::Interface &l)
 {
 	if(l.GetIdentifier() != "cl")
 		return;
 	Lua::openvr::register_lua_library(l);
 }
-void PRAGMA_EXPORT pragma_detach() { Lua::openvr::close(); }
-void PRAGMA_EXPORT preinitialize_openvr() { ::openvr::preinitialize_openvr(); }
-bool PRAGMA_EXPORT is_hmd_present() { return ::openvr::is_hmd_present(); }
+void PR_EXPORT pragma_detach() { Lua::openvr::close(); }
+void PR_EXPORT preinitialize_openvr() { ::openvr::preinitialize_openvr(); }
+bool PR_EXPORT is_hmd_present() { return ::openvr::is_hmd_present(); }
 /*
-	void PRAGMA_EXPORT InitializeLua(Lua::Interface &l)
+	void PR_EXPORT InitializeLua(Lua::Interface &l)
 	{
 		if(l.GetIdentifier() != "cl")
 			return;

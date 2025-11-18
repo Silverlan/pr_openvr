@@ -6,8 +6,7 @@ pr_add_module(${PROJ_NAME} SHARED "addons/virtual_reality/modules/openvr/")
 pr_add_dependency(${PROJ_NAME} ishared TARGET PUBLIC)
 pr_add_dependency(${PROJ_NAME} iclient TARGET PUBLIC)
 
-pr_add_headers(${PROJ_NAME} "include/")
-pr_add_sources(${PROJ_NAME} "src/")
+pr_init_module(${PROJ_NAME})
 
 #TODO: Point this to proper arch lib
 if(WIN32)
