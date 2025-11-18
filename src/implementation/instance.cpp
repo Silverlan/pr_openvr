@@ -438,17 +438,14 @@ void OpenVrInitializer::Initialize(bool wait)
 		auto curLibPath = util::get_env_variable("LD_LIBRARY_PATH");
 		if(curLibPath.has_value()) {
 			auto steamPaths = util::steam::find_steam_root_paths();
-			std::unordered_map<std::string, bool> libPaths {
-				{"steamapps/common/SteamVR/bin/linux64/qt/lib", false},
-				{"steamapps/common/SteamVR/bin/linux64", false}
-			};
+			std::unordered_map<std::string, bool> libPaths {{"steamapps/common/SteamVR/bin/linux64/qt/lib", false}, {"steamapps/common/SteamVR/bin/linux64", false}};
 			for(auto &steamPath : steamPaths) {
 				for(auto &[relLibPath, b] : libPaths) {
 					if(b)
 						continue;
 					auto libPath = util::DirPath(steamPath, relLibPath);
 					if(filemanager::exists(libPath.GetString())) {
-						auto newLibPath = *curLibPath + ":" +libPath.GetString();
+						auto newLibPath = *curLibPath + ":" + libPath.GetString();
 						util::set_env_variable("LD_LIBRARY_PATH", newLibPath);
 						b = true;
 					}
