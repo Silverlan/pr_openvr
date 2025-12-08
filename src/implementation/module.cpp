@@ -22,7 +22,7 @@ bool PR_EXPORT is_hmd_present() { return ::openvr::is_hmd_present(); }
 			return;
 		if(IState::is_game_active() == true)
 			Lua::openvr::register_lua_library(l.GetState());
-		cbGameStarted = IState::add_callback(IState::Callback::OnGameStart,FunctionCallback<void,CGame*>::Create([](CGame *game) {
+		cbGameStarted = IState::add_callback(IState::Callback::OnGameStart,FunctionCallback<void,CGame*>::Create([](pragma::CGame *game) {
 			if(cbGameInitialized.IsValid())
 				cbGameInitialized.Remove();
 			cbGameInitialized = IState::add_callback(IState::Callback::OnGameInitialized,FunctionCallback<void,Game*>::Create([](Game *game) {
@@ -36,7 +36,7 @@ bool PR_EXPORT is_hmd_present() { return ::openvr::is_hmd_present(); }
 				Lua::openvr::register_lua_library(l);
 			}));
 		}));
-		cbGameEnd = IState::add_callback(IState::Callback::EndGame,FunctionCallback<void,CGame*>::Create([](CGame *game) {
+		cbGameEnd = IState::add_callback(IState::Callback::EndGame,FunctionCallback<void,CGame*>::Create([](pragma::CGame *game) {
 			if(s_vrInstance != nullptr)
 				s_vrInstance->ClearScene();
 			clear_callbacks();
