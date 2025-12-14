@@ -176,8 +176,8 @@ export namespace openvr {
 		std::chrono::steady_clock::duration GetPoseWaitTime() const;
 		double GetSmoothedPoseWaitTime() const;
 
-		void SetDeviceZeroPose(uint32_t deviceIndex, const umath::Transform &pose);
-		const umath::Transform *GetInverseDeviceZeroPose(uint32_t deviceIndex) const;
+		void SetDeviceZeroPose(uint32_t deviceIndex, const pragma::math::Transform &pose);
+		const pragma::math::Transform *GetInverseDeviceZeroPose(uint32_t deviceIndex) const;
 
 		const Mat4 &GetHMDPoseMatrix() const;
 		const Mat4 &GetPoseMatrix(uint32_t deviceIndex) const;
@@ -193,7 +193,7 @@ export namespace openvr {
 		vr::IVRRenderModels *m_renderInterface;
 		vr::IVRCompositor *m_compositor;
 		vr::IVRChaperone *m_chaperone;
-		util::WeakHandle<prosper::Shader> m_hShaderFlip;
+		pragma::util::WeakHandle<prosper::Shader> m_hShaderFlip;
 		std::unordered_map<uint32_t, ControllerState> m_controllerStates;
 		std::array<Mat4, vr::k_unMaxTrackedDeviceCount> m_poseTransforms;
 		std::vector<vr::VREvent_t> m_events {};
@@ -207,7 +207,7 @@ export namespace openvr {
 		Mat4 m_hmdPoseMatrix = umat::identity();
 		std::unique_ptr<Eye> m_leftEye;
 		std::unique_ptr<Eye> m_rightEye;
-		std::vector<umath::Transform> m_invDeviceZeroPoses;
+		std::vector<pragma::math::Transform> m_invDeviceZeroPoses;
 		std::function<void(uint32_t, uint32_t, pragma::platform::KeyState)> m_controllerStateCallback = nullptr;
 		bool m_bHmdViewEnabled = false;
 		mutable bool m_isRenderingSuspended = false;

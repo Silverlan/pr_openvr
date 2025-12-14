@@ -29,6 +29,6 @@ export namespace openvr {
 		vr::Texture_t m_vrTexture;
 
 		vr::EVREye m_eye;
-		util::WeakHandle<pragma::CCameraComponent> m_camera {};
+		pragma::util::WeakHandle<pragma::CCameraComponent> m_camera {};
 	};
 };

@@ -411,7 +411,7 @@ namespace Lua::openvr {
 		return std::pair<::Mat4, Vector3> {m, Vector3(pose.vVelocity.v[0], pose.vVelocity.v[1], pose.vVelocity.v[2]) * static_cast<float>(pragma::metres_to_units(1.f))};
 	}
 
-	static umath::Transform openvr_matrix_to_pragma_pose(const ::Mat4 &poseMatrix)
+	static pragma::math::Transform openvr_matrix_to_pragma_pose(const ::Mat4 &poseMatrix)
 	{
 		Vector3 scale;
 		Vector3 skew;
@@ -424,10 +424,10 @@ namespace Lua::openvr {
 		static auto openVrToPragmaPoseTransform = uquat::create(EulerAngles(0.f, 180.f, 0.f));
 		rot = rot * openVrToPragmaPoseTransform;
 		pos *= static_cast<float>(pragma::metres_to_units(1.f));
-		return umath::Transform {pos, rot};
+		return pragma::math::Transform {pos, rot};
 	}
 
-	std::pair<umath::Transform, Vector3> get_raw_pose(::openvr::Instance &instance, uint32_t deviceIdx)
+	std::pair<pragma::math::Transform, Vector3> get_raw_pose(::openvr::Instance &instance, uint32_t deviceIdx)
 	{
 		vr::TrackedDevicePose_t pose {};
 		::Mat4 m {};
@@ -456,10 +456,10 @@ namespace Lua::openvr {
 			mpose.RotateGlobal(correctionRotation);
 		}
 
-		return std::pair<umath::Transform, Vector3> {mpose, Vector3(pose.vVelocity.v[0], pose.vVelocity.v[1], pose.vVelocity.v[2]) * static_cast<float>(pragma::metres_to_units(1.f))};
+		return std::pair<pragma::math::Transform, Vector3> {mpose, Vector3(pose.vVelocity.v[0], pose.vVelocity.v[1], pose.vVelocity.v[2]) * static_cast<float>(pragma::metres_to_units(1.f))};
 	}
 
-	std::pair<umath::Transform, Vector3> get_pose(::openvr::Instance &instance, uint32_t deviceIdx)
+	std::pair<pragma::math::Transform, Vector3> get_pose(::openvr::Instance &instance, uint32_t deviceIdx)
 	{
 		auto [pose, vel] = get_raw_pose(instance, deviceIdx);
 
@@ -615,7 +615,7 @@ void Lua::openvr::register_lua_library(Lua::Interface &l)
 	modVr[luabind::def("get_smoothed_pose_wait_time", &::openvr::Instance::GetSmoothedPoseWaitTime)];
 	modVr[luabind::def("get_hmd_pose_matrix", &::openvr::Instance::GetHMDPoseMatrix, luabind::copy_policy<0> {})];
 	modVr[luabind::def(
-	  "get_hmd_pose", +[]() -> umath::Transform {
+	  "get_hmd_pose", +[]() -> pragma::math::Transform {
 		  auto &hmdPoseMatrix = s_vrInstance->GetHMDPoseMatrix();
 		  return openvr_matrix_to_pragma_pose(hmdPoseMatrix);
 	  })];
@@ -819,22 +819,22 @@ void Lua::openvr::register_lua_library(Lua::Interface &l)
 	Lua::RegisterLibraryEnums(lua, "openvr", activityLevelEnums);
 
 	std::unordered_map<std::string, lua::Integer> propTrackingResults {
-	  {"TRACKING_RESULT_UNINITIALIZED", umath::to_integral(vr::ETrackingResult::TrackingResult_Uninitialized)},
-	  {"TRACKING_RESULT_CALIBRATING_IN_PROGRESS", umath::to_integral(vr::ETrackingResult::TrackingResult_Calibrating_InProgress)},
-	  {"TRACKING_RESULT_CALIBRATING_OUT_OF_RANGE", umath::to_integral(vr::ETrackingResult::TrackingResult_Calibrating_OutOfRange)},
-	  {"TRACKING_RESULT_RUNNING_OK", umath::to_integral(vr::ETrackingResult::TrackingResult_Running_OK)},
-	  {"TRACKING_RESULT_RUNNING_OUT_OF_RANGE", umath::to_integral(vr::ETrackingResult::TrackingResult_Running_OutOfRange)},
+	  {"TRACKING_RESULT_UNINITIALIZED", pragma::math::to_integral(vr::ETrackingResult::TrackingResult_Uninitialized)},
+	  {"TRACKING_RESULT_CALIBRATING_IN_PROGRESS", pragma::math::to_integral(vr::ETrackingResult::TrackingResult_Calibrating_InProgress)},
+	  {"TRACKING_RESULT_CALIBRATING_OUT_OF_RANGE", pragma::math::to_integral(vr::ETrackingResult::TrackingResult_Calibrating_OutOfRange)},
+	  {"TRACKING_RESULT_RUNNING_OK", pragma::math::to_integral(vr::ETrackingResult::TrackingResult_Running_OK)},
+	  {"TRACKING_RESULT_RUNNING_OUT_OF_RANGE", pragma::math::to_integral(vr::ETrackingResult::TrackingResult_Running_OutOfRange)},
 	};
 	Lua::RegisterLibraryEnums(lua, "openvr", propTrackingResults);
 
 	std::unordered_map<std::string, lua::Integer> trackedControllerRoles {
-	  {"TRACKED_CONTROLLER_ROLE_INVALID", umath::to_integral(vr::ETrackedControllerRole::TrackedControllerRole_Invalid)},
-	  {"TRACKED_CONTROLLER_ROLE_LEFT_HAND", umath::to_integral(vr::ETrackedControllerRole::TrackedControllerRole_LeftHand)},
-	  {"TRACKED_CONTROLLER_ROLE_RIGHT_HAND", umath::to_integral(vr::ETrackedControllerRole::TrackedControllerRole_RightHand)},
-	  {"TRACKED_CONTROLLER_ROLE_OPT_OUT", umath::to_integral(vr::ETrackedControllerRole::TrackedControllerRole_OptOut)},
-	  {"TRACKED_CONTROLLER_ROLE_TREADMILL", umath::to_integral(vr::ETrackedControllerRole::TrackedControllerRole_Treadmill)},
-	  {"TRACKED_CONTROLLER_ROLE_STYLUS", umath::to_integral(vr::ETrackedControllerRole::TrackedControllerRole_Stylus)},
-	  {"TRACKED_CONTROLLER_ROLE_MAX", umath::to_integral(vr::ETrackedControllerRole::TrackedControllerRole_Max)},
+	  {"TRACKED_CONTROLLER_ROLE_INVALID", pragma::math::to_integral(vr::ETrackedControllerRole::TrackedControllerRole_Invalid)},
+	  {"TRACKED_CONTROLLER_ROLE_LEFT_HAND", pragma::math::to_integral(vr::ETrackedControllerRole::TrackedControllerRole_LeftHand)},
+	  {"TRACKED_CONTROLLER_ROLE_RIGHT_HAND", pragma::math::to_integral(vr::ETrackedControllerRole::TrackedControllerRole_RightHand)},
+	  {"TRACKED_CONTROLLER_ROLE_OPT_OUT", pragma::math::to_integral(vr::ETrackedControllerRole::TrackedControllerRole_OptOut)},
+	  {"TRACKED_CONTROLLER_ROLE_TREADMILL", pragma::math::to_integral(vr::ETrackedControllerRole::TrackedControllerRole_Treadmill)},
+	  {"TRACKED_CONTROLLER_ROLE_STYLUS", pragma::math::to_integral(vr::ETrackedControllerRole::TrackedControllerRole_Stylus)},
+	  {"TRACKED_CONTROLLER_ROLE_MAX", pragma::math::to_integral(vr::ETrackedControllerRole::TrackedControllerRole_Max)},
 	};
 	Lua::RegisterLibraryEnums(lua, "openvr", trackedControllerRoles);
 
@@ -921,14 +921,14 @@ void Lua::openvr::register_lua_library(Lua::Interface &l)
 	  {"TRACKING_UNIVERSE_ORIGIN_STANDING", static_cast<int32_t>(vr::ETrackingUniverseOrigin::TrackingUniverseStanding)},
 	  {"TRACKING_UNIVERSE_ORIGIN_RAW_AND_UNCALIBRATED", static_cast<int32_t>(vr::ETrackingUniverseOrigin::TrackingUniverseRawAndUncalibrated)},
 
-	  {"EYE_LEFT", umath::to_integral(vr::EVREye::Eye_Left)},
-	  {"EYE_RIGHT", umath::to_integral(vr::EVREye::Eye_Right)},
+	  {"EYE_LEFT", pragma::math::to_integral(vr::EVREye::Eye_Left)},
+	  {"EYE_RIGHT", pragma::math::to_integral(vr::EVREye::Eye_Right)},
 
-	  {"TRACKED_DEVICE_CLASS_INVALID", umath::to_integral(vr::ETrackedDeviceClass::TrackedDeviceClass_Invalid)},
-	  {"TRACKED_DEVICE_CLASS_HMD", umath::to_integral(vr::ETrackedDeviceClass::TrackedDeviceClass_HMD)},
-	  {"TRACKED_DEVICE_CLASS_CONTROLLER", umath::to_integral(vr::ETrackedDeviceClass::TrackedDeviceClass_Controller)},
-	  {"TRACKED_DEVICE_CLASS_GENERIC_TRACKER", umath::to_integral(vr::ETrackedDeviceClass::TrackedDeviceClass_GenericTracker)},
-	  {"TRACKED_DEVICE_CLASS_TRACKING_REFERENCE", umath::to_integral(vr::ETrackedDeviceClass::TrackedDeviceClass_TrackingReference)},
+	  {"TRACKED_DEVICE_CLASS_INVALID", pragma::math::to_integral(vr::ETrackedDeviceClass::TrackedDeviceClass_Invalid)},
+	  {"TRACKED_DEVICE_CLASS_HMD", pragma::math::to_integral(vr::ETrackedDeviceClass::TrackedDeviceClass_HMD)},
+	  {"TRACKED_DEVICE_CLASS_CONTROLLER", pragma::math::to_integral(vr::ETrackedDeviceClass::TrackedDeviceClass_Controller)},
+	  {"TRACKED_DEVICE_CLASS_GENERIC_TRACKER", pragma::math::to_integral(vr::ETrackedDeviceClass::TrackedDeviceClass_GenericTracker)},
+	  {"TRACKED_DEVICE_CLASS_TRACKING_REFERENCE", pragma::math::to_integral(vr::ETrackedDeviceClass::TrackedDeviceClass_TrackingReference)},
 
 	  {"BUTTON_ID_SYSTEM", static_cast<int32_t>(vr::EVRButtonId::k_EButton_System)},
 	  {"BUTTON_ID_APPLICATION_MENU", static_cast<int32_t>(vr::EVRButtonId::k_EButton_ApplicationMenu)},

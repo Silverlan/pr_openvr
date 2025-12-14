@@ -435,18 +435,18 @@ void OpenVrInitializer::Initialize(bool wait)
 		// As a workaround, we try to find the steam installation location and add the binary path
 		// to the path lookup env variable.
 		// (Alternatively the application can be added as a non-steam game in Steam and then started through steam.)
-		auto curLibPath = util::get_env_variable("LD_LIBRARY_PATH");
+		auto curLibPath = pragma::util::get_env_variable("LD_LIBRARY_PATH");
 		if(curLibPath.has_value()) {
-			auto steamPaths = util::steam::find_steam_root_paths();
+			auto steamPaths = pragma::util::steam::find_steam_root_paths();
 			std::unordered_map<std::string, bool> libPaths {{"steamapps/common/SteamVR/bin/linux64/qt/lib", false}, {"steamapps/common/SteamVR/bin/linux64", false}};
 			for(auto &steamPath : steamPaths) {
 				for(auto &[relLibPath, b] : libPaths) {
 					if(b)
 						continue;
-					auto libPath = util::DirPath(steamPath, relLibPath);
-					if(filemanager::exists(libPath.GetString())) {
+					auto libPath = pragma::util::DirPath(steamPath, relLibPath);
+					if(pragma::fs::exists(libPath.GetString())) {
 						auto newLibPath = *curLibPath + ":" + libPath.GetString();
-						util::set_env_variable("LD_LIBRARY_PATH", newLibPath);
+						pragma::util::set_env_variable("LD_LIBRARY_PATH", newLibPath);
 						b = true;
 					}
 				}
@@ -458,7 +458,7 @@ void OpenVrInitializer::Initialize(bool wait)
 			m_ivrSystem = vr::VR_Init(&m_error, vr::EVRApplicationType::VRApplication_Scene);
 			m_state = State::InitializationComplete;
 		}};
-		util::set_thread_name(m_thread, "openvr_init");
+		pragma::util::set_thread_name(m_thread, "openvr_init");
 	}
 	if(wait && m_thread.joinable())
 		m_thread.join();
@@ -482,8 +482,8 @@ void openvr::initialize_vulkan_texture_data(vr::VRVulkanTextureData_t &vrTexture
 	vrTextureData.m_nQueueFamilyIndex = renderContext.GetUniversalQueueFamilyIndex();
 	vrTextureData.m_nWidth = img.GetWidth();
 	vrTextureData.m_nHeight = img.GetHeight();
-	vrTextureData.m_nFormat = umath::to_integral(img.GetFormat());
-	vrTextureData.m_nSampleCount = umath::to_integral(img.GetSampleCount());
+	vrTextureData.m_nFormat = pragma::math::to_integral(img.GetFormat());
+	vrTextureData.m_nSampleCount = pragma::math::to_integral(img.GetSampleCount());
 }
 
 static std::unique_ptr<OpenVrInitializer> g_openVrInitializer = nullptr;
@@ -513,7 +513,7 @@ Instance::Instance(vr::IVRSystem *system, RenderAPI renderAPI, vr::IVRRenderMode
 	m_leftEye = std::make_unique<Eye>(*this, vr::EVREye::Eye_Left);
 	m_rightEye = std::make_unique<Eye>(*this, vr::EVREye::Eye_Right);
 	auto *shaderFlip = iclient::get_shader("screen_flip_y");
-	m_hShaderFlip = (shaderFlip != nullptr) ? shaderFlip->GetHandle() : util::WeakHandle<prosper::Shader> {};
+	m_hShaderFlip = (shaderFlip != nullptr) ? shaderFlip->GetHandle() : pragma::util::WeakHandle<prosper::Shader> {};
 #ifdef _DEBUG
 	m_compositor->ShowMirrorWindow();
 #endif
@@ -568,13 +568,13 @@ Mat4 openvr::steam_vr_matrix_to_engine_matrix(const vr::HmdMatrix34_t &matPose)
 const Mat4 &Instance::GetHMDPoseMatrix() const { return m_hmdPoseMatrix; }
 const Mat4 &Instance::GetPoseMatrix(uint32_t deviceIndex) const { return m_poseTransforms.at(deviceIndex); }
 
-void Instance::SetDeviceZeroPose(uint32_t deviceIndex, const umath::Transform &pose)
+void Instance::SetDeviceZeroPose(uint32_t deviceIndex, const pragma::math::Transform &pose)
 {
 	if(deviceIndex >= m_invDeviceZeroPoses.size())
 		m_invDeviceZeroPoses.resize(deviceIndex + 1);
 	m_invDeviceZeroPoses[deviceIndex] = pose.GetInverse();
 }
-const umath::Transform *Instance::GetInverseDeviceZeroPose(uint32_t deviceIndex) const
+const pragma::math::Transform *Instance::GetInverseDeviceZeroPose(uint32_t deviceIndex) const
 {
 	if(deviceIndex >= m_invDeviceZeroPoses.size())
 		return nullptr;
@@ -670,7 +670,7 @@ std::unique_ptr<Instance> Instance::Create(vr::EVRInitError *err, std::vector<st
 	auto *ivr = initialize_openvr(err);
 	if(ivr == nullptr)
 		return nullptr;
-	util::ScopeGuard guard {[]() { vr::VR_Shutdown(); }};
+	pragma::util::ScopeGuard guard {[]() { vr::VR_Shutdown(); }};
 	auto *pRenderModels = static_cast<vr::IVRRenderModels *>(vr::VR_GetGenericInterface(vr::IVRRenderModels_Version, err));
 	if(pRenderModels == nullptr)
 		return nullptr;
@@ -683,9 +683,9 @@ std::unique_ptr<Instance> Instance::Create(vr::EVRInitError *err, std::vector<st
 
 	auto renderAPI = pragma::get_cengine()->GetRenderContext().GetAPIIdentifier();
 	RenderAPI eRenderAPI;
-	if(ustring::compare<std::string>(renderAPI, "OpenGL"))
+	if(pragma::string::compare<std::string>(renderAPI, "OpenGL"))
 		eRenderAPI = RenderAPI::OpenGL;
-	else if(ustring::compare<std::string>(renderAPI, "Vulkan"))
+	else if(pragma::string::compare<std::string>(renderAPI, "Vulkan"))
 		eRenderAPI = RenderAPI::Vulkan;
 	else
 		return nullptr;
@@ -707,8 +707,8 @@ std::unique_ptr<Instance> Instance::Create(vr::EVRInitError *err, std::vector<st
 		}
 		pCompositor->SetExplicitTimingMode(vr::EVRCompositorTimingMode::VRCompositorTimingMode_Explicit_RuntimePerformsPostPresentHandoff);
 
-		ustring::explode(instanceExt, " ", reqInstanceExtensions);
-		ustring::explode(deviceExt, " ", reqDeviceExtensions);
+		pragma::string::explode(instanceExt, " ", reqInstanceExtensions);
+		pragma::string::explode(deviceExt, " ", reqDeviceExtensions);
 		std::cout << "[VR] Instance Extensions Required: " << instanceExt << std::endl;
 		std::cout << "[VR] Device Extensions Required: " << deviceExt << std::endl;
 
