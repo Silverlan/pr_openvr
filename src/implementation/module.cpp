@@ -4,11 +4,12 @@
 module pragma.modules.openvr;
 
 import :controller_state;
+import pragma.string;
 
 extern "C" {
 void PR_EXPORT pragma_initialize_lua(Lua::Interface &l)
 {
-	if(l.GetIdentifier() != "cl")
+	if(pragma::string::compare<std::string>(l.GetIdentifier(), "cl") == false)
 		return;
 	Lua::openvr::register_lua_library(l);
 }
