@@ -714,13 +714,13 @@ std::unique_ptr<Instance> Instance::Create(vr::EVRInitError *err, std::vector<st
 
 		for(auto &ext : reqInstanceExtensions) {
 			if(vkContext.IsInstanceExtensionEnabled(ext) == false) {
-				Con::cerr << "[VR] ERROR: Required instance extension '" << ext << "' is not enabled!" << Con::endl;
+				Con::CERR << "[VR] ERROR: Required instance extension '" << ext << "' is not enabled!" << Con::endl;
 				break;
 			}
 		}
 		for(auto &ext : reqDeviceExtensions) {
 			if(vkContext.IsDeviceExtensionEnabled(ext) == false) {
-				Con::cerr << "[VR] ERROR: Required device extension '" << ext << "' is not enabled!" << Con::endl;
+				Con::CERR << "[VR] ERROR: Required device extension '" << ext << "' is not enabled!" << Con::endl;
 				break;
 			}
 		}
